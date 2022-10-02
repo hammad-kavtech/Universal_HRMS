@@ -3,6 +3,7 @@ from .views import HrmsUserLogin, HrmsUserProfile, HrmsUserChangePassword, SendP
 
 urlpatterns = [
     path('login/', HrmsUserLogin.as_view(), name="login"),
+    path('login/<uid>', HrmsUserLogin.as_view(), name="login"),
     path('profile/', HrmsUserProfile.as_view(), name="profile"),
     path('changepassword/', HrmsUserChangePassword().as_view(), name="changepassword"),
     path('resetpassword_email/', SendPasswordResetEmail().as_view(), name="resetpassword_email"),
