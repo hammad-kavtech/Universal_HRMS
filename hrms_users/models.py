@@ -18,6 +18,7 @@ class HrmsUsers(AbstractUser):
     profile_image = models.ImageField(null=True, blank=True, upload_to='profiles/', default='profiles/users-default.png')
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
+    username = None
     
     objects = HrmsUsersManager()
 
