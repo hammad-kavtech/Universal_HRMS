@@ -4,8 +4,8 @@ from rest_framework.views import APIView
 from rest_framework import generics
 from .serializers import HrmsUserLoginSerializer, HrmsUserProfileSerializer, HrmsUserChangePasswordSerializer, SendPasswordResetEmailSerializer, HrmsUserPasswordResetSerializer
 from django.contrib.auth import authenticate
-from .models import HrmsUsers
-from .renderers import HrmsUserRenderer
+# from .models import HrmsUsers
+# from .renderers import HrmsUserRenderer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 # Create your views here.

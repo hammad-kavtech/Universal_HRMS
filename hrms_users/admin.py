@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import HrmsUsers
+from django.contrib.auth.models import Group
 
 class UserAdmin(BaseUserAdmin):
     # The fields to be used in displaying the User model.
@@ -26,4 +27,4 @@ class UserAdmin(BaseUserAdmin):
 
 
 admin.site.register(HrmsUsers, UserAdmin)
-
+admin.site.unregister(Group)
