@@ -7,7 +7,6 @@ from django.contrib.auth import authenticate
 from .renderers import HrmsUserRenderer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 # Create your views here.
 
 def get_tokens_for_user(user):
