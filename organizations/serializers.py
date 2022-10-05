@@ -9,7 +9,7 @@ class CreateOrganizationSerializers(serializers.ModelSerializer):
         fields = ['organization_name', 'organization_tagline', 'organization_vision', 'organization_mission', 'organization_logo','created_by', 'established_date', 'company_type']
 
         def validate(self, attrs):
-            
+
             return attrs
 
 class ViewOrganizationSerializers(serializers.ModelSerializer):
@@ -22,10 +22,14 @@ class ViewOrganizationSerializers(serializers.ModelSerializer):
 class UpdateOrganizationSerializers(serializers.ModelSerializer):
     class Meta:
         model = organization
-        fields = ['organization_name', 'organization_tagline', 'organization_vision', 'organization_mission', 'organization_logo','created_by', 'established_date', 'company_type']
+        fields = ['organization_name', 'organization_tagline', 'organization_vision', 'organization_mission', 'organization_logo','created_by', 'established_date', 'company_type', 'organization_is_active']
 
+    def validate(self, attrs):
+        
 
-class DeleteOrganizationSerializers(serializers.ModelSerializer):
+        return attrs
+
+class DeactivateOrganizationSerializers(serializers.ModelSerializer):
     class Meta:
         model = organization
         fields = '__all__'
