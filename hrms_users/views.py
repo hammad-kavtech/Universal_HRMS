@@ -26,27 +26,31 @@ class HrmsUserLogin(APIView):
             user = authenticate(email=email, password=password)
             if user is not None:
                 token = get_tokens_for_user(user)
-                return Response({'status': '200', 'token': token ,'msg':'Login Successful'}, status=status.HTTP_200_OK)
+                return Response({'status': 200, 'token': token ,'msg':'Login Successful'}, status=status.HTTP_200_OK)
             else: 
-                return Response({'status': '404', 'errors':{'non_field_errors':['Email or Password is not valid']}}, status=status.HTTP_404_NOT_FOUND)
+                return Response({'status': 404, 'errors':{'non_field_errors':['Email or Password is not valid']}}, status=status.HTTP_404_NOT_FOUND)
         else:
-            return Response({'status': '400'}, serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'status': 400}, serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class HrmsUserProfile(APIView):
     renderer_classes = [Renderer]
     permission_classes = [IsAuthenticated]
     def get(self, request):
-        serializer = HrmsUserProfileSerializer(request.user)
-        return Response({'status': '200'}, serializer.data, status=status.HTTP_200_OK)
+        try:
+            serializer = HrmsUserProfileSerializer(request.user)
+            return Response({'status': 200}, serializer.data)
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong'})
+
 
 class HrmsUserChangePassword(APIView):
     renderer_classes = [Renderer]
     def post(self, request):
         serializer = HrmsUserChangePasswordSerializer(data=request.data, context={'hrms_user':request.user})
         if serializer.is_valid():
-            return Response({'status': '200', 'msg':'Password Changed Successfully'}, status=status.HTTP_200_OK)
+            return Response({'status': 200, 'msg':'Password Changed Successfully'}, status=status.HTTP_200_OK)
         else:
-            return Response({'status': '400'}, serializer.errors, status=status.HTTP_400_BAD_REQUEST)            
+            return Response({'status': 400}, serializer.errors, status=status.HTTP_400_BAD_REQUEST)            
 
 class SendPasswordResetEmail(APIView):
     renderer_classes = [Renderer]
@@ -55,7 +59,7 @@ class SendPasswordResetEmail(APIView):
         if serializer.is_valid():
             return Response({'msg': 'Password Reset link send. Please check your email'}, status=status.HTTP_200_OK)
         else:
-            return Response({'status': '400'}, serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'status': 400}, serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class HrmsUserResetPassword(APIView):
@@ -63,9 +67,9 @@ class HrmsUserResetPassword(APIView):
     def post(self, request, uid, token):
         serializer = HrmsUserPasswordResetSerializer(data=request.data, context={'uid':uid, 'token':token})
         if serializer.is_valid():
-            return Response({'status': '200', 'msg': 'password is reset successfully'}, status=status.HTTP_200_OK)
+            return Response({'status': 200, 'msg': 'password is reset successfully'}, status=status.HTTP_200_OK)
         else:
-            return Response({'status': '400'}, serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'status': 400}, serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class HrmsUserLogout(APIView):
     permission_classes = [IsAuthenticated]
@@ -75,9 +79,9 @@ class HrmsUserLogout(APIView):
         serializer = HrmsUserLogoutSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({'status': '204', 'msg':'Logout Successfully'}, status=status.HTTP_204_NO_CONTENT)
+            return Response({'status': 204, 'msg':'Logout Successfully'}, status=status.HTTP_204_NO_CONTENT)
         else:
-            return Response({'status': '400'}, serializer.error, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'status': 400}, serializer.error, status=status.HTTP_400_BAD_REQUEST)
 
 
     
