@@ -36,7 +36,7 @@ class ViewOrganization(APIView):
         try:
             organization_object = self.get_object(pk)
             serialize_object = ViewOrganizationSerializers(organization_object)
-            return Response(serialize_object.data)
+            return Response({'status':200, 'data': serialize_object.data}, status=status.HTTP_200_OK)
         except:
             return Response({'status':400, 'errors':{'AttributeError':['ID does not exists']}}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -53,9 +53,9 @@ class CreateOrganization(APIView):
         serializer = CreateOrganizationSerializers(data = request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({'status':201}, serializer.data, status=status.HTTP_201_CREATED)
+            return Response({'status':201, 'data':serializer.data}, status=status.HTTP_201_CREATED)
         else:
-            return Response({'status':400}, serializer.errors, status=status.HTTP_400_CREATED)
+            return Response({'status':400, 'data': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UpdateOrganization(APIView): 
@@ -77,9 +77,9 @@ class UpdateOrganization(APIView):
         serializer = UpdateOrganizationSerializers(organization_object, data = request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({'status':200}, serializer.data, status=status.HTTP_200_OK)
+            return Response({'status':200, 'data': serializer.data}, status=status.HTTP_200_OK)
         else:
-            return Response({'status':400}, serializer.errors, status=status.HTTP_400_CREATED)
+            return Response({'status':400, 'errors':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 class DeleteOrganization(APIView):
     permission_classes = [IsAuthenticated]
