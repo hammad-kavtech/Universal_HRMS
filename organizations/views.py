@@ -12,7 +12,7 @@ from .serializers import ViewOrganizationSerializers, CreateOrganizationSerializ
 # Create your views here.
 
 
-
+# get specific organization
 class ViewOrganization(APIView):
     permission_classes = [IsAuthenticated]
     renderer_classes = [Renderer]
@@ -35,6 +35,8 @@ class ViewOrganization(APIView):
         except:
             return Response({'status':400, 'errors':{'AttributeError':['ID does not exists']}}, status=status.HTTP_400_BAD_REQUEST)
 
+
+# shows all organization
 class ViewAllOrganizations(APIView): 
     def get(self, request):
         try:
@@ -44,6 +46,8 @@ class ViewAllOrganizations(APIView):
         except:
             return Response({'status':404, "errors": serializer.errors})
 
+
+#show all deactivate organizations
 class ViewDeactivateOrganization(APIView):
     def get(self, request):
         try:
@@ -52,7 +56,8 @@ class ViewDeactivateOrganization(APIView):
             return Response({'status':200,'data':serializer.data})
         except:
             return Response({'status':404, "errors": serializer.errors})
-        
+
+#show all active organization    
 class ViewActivateOrganization(APIView):
     def get(self, request):
         try:
@@ -116,6 +121,7 @@ class UpdateOrganization(APIView):
 #         except:
 #             return Response({'status':400 ,'msg': 'Organization doesnot get deleted successfully'}, status=status.HTTP_400_BAD_REQUEST)
 
+# Deactivate organization
 class DeactivateOrganization(APIView):
     permission_classes = [IsAuthenticated]
     renderer_classes = [Renderer]
@@ -128,16 +134,12 @@ class DeactivateOrganization(APIView):
     def post(self, request, pk):
         try:
             obj = self.get_object(pk)
+            if obj.organization_is_active == False:
+                return Response({'status':200, 'msg': 'Organization is already inactivated'})
+            
             obj.organization_is_active = True
             obj.save()
             serializer = DeactivateOrganizationSerializers(obj)
-            is_active = serializer.data.get('organization_is_active')
-            if is_active==False:
-                return Response({'status':200, 'msg': 'Organization is already inactivated'})
-            #if organaziation is activated
-            
-            # serializer.objects.filter(pk=pk).update(organization_is_active = True)
-            # serializer.update(organization_is_active = 'False')
             return Response({'status':200, 'data': serializer.data}, status=status.HTTP_200_OK)
         except:
-            return Response({'status':404 ,'msg': 'Organization doesnot get inactivated successfully'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'status':404 ,'msg': 'Organization doesnot exists or get inactivated successfully'}, status=status.HTTP_404_NOT_FOUND)
