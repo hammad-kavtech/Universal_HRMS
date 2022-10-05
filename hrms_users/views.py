@@ -4,7 +4,7 @@ from rest_framework import generics
 from rest_framework.views import APIView
 from .serializers import HrmsUserLoginSerializer, HrmsUserProfileSerializer, HrmsUserChangePasswordSerializer, SendPasswordResetEmailSerializer, HrmsUserPasswordResetSerializer, HrmsUserLogoutSerializer
 from django.contrib.auth import authenticate
-from .renderers import HrmsUserRenderer
+from helpers.renderers import Renderer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 # Create your views here.
@@ -17,60 +17,67 @@ def get_tokens_for_user(user):
     }
 
 class HrmsUserLogin(APIView):
-    renderer_classes = [HrmsUserRenderer]
+    renderer_classes = [Renderer]
     def post(self, request, format=None):
         serializer = HrmsUserLoginSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        email = serializer.data.get('email')
-        password = serializer.data.get('password')
-        user = authenticate(email=email, password=password)
-        if user is not None:
-            token = get_tokens_for_user(user)
-            return Response({'token': token ,'msg':'Login Successful'}, status=status.HTTP_200_OK)
-        else: 
-            return Response({'errors':{'non_field_errors':['Email or Password is not valid']}}, status=status.HTTP_404_NOT_FOUND)
-    
+        if serializer.is_valid():
+            email = serializer.data.get('email')
+            password = serializer.data.get('password')
+            user = authenticate(email=email, password=password)
+            if user is not None:
+                token = get_tokens_for_user(user)
+                return Response({'status': '200', 'token': token ,'msg':'Login Successful'}, status=status.HTTP_200_OK)
+            else: 
+                return Response({'status': '404', 'errors':{'non_field_errors':['Email or Password is not valid']}}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({'status': '400'}, serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class HrmsUserProfile(APIView):
-    renderer_classes = [HrmsUserRenderer]
+    renderer_classes = [Renderer]
     permission_classes = [IsAuthenticated]
-    def get(self, request, format=None):
+    def get(self, request):
         serializer = HrmsUserProfileSerializer(request.user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({'status': '200'}, serializer.data, status=status.HTTP_200_OK)
 
 class HrmsUserChangePassword(APIView):
-    renderer_classes = [HrmsUserRenderer]
-    def post(self, request, format=None):
+    renderer_classes = [Renderer]
+    def post(self, request):
         serializer = HrmsUserChangePasswordSerializer(data=request.data, context={'hrms_user':request.user})
-        serializer.is_valid(raise_exception=True)
-        return Response({'msg':'Password Changed Successfully'}, status=status.HTTP_200_OK)
+        if serializer.is_valid():
+            return Response({'status': '200', 'msg':'Password Changed Successfully'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'status': '400'}, serializer.errors, status=status.HTTP_400_BAD_REQUEST)            
 
 class SendPasswordResetEmail(APIView):
-    renderer_classes = [HrmsUserRenderer]
-    def post(self, request, format=None):
+    renderer_classes = [Renderer]
+    def post(self, request):
         serializer = SendPasswordResetEmailSerializer(data = request.data)
-        serializer.is_valid(raise_exception=True)
-        return Response({'msg': 'Password Reset link send. Please check your email'}, status=status.HTTP_200_OK)
+        if serializer.is_valid():
+            return Response({'msg': 'Password Reset link send. Please check your email'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'status': '400'}, serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class HrmsUserResetPassword(APIView):
-    renderer_classes = [HrmsUserRenderer]
-    def post(self, request, uid, token, format=None):
+    renderer_classes = [Renderer]
+    def post(self, request, uid, token):
         serializer = HrmsUserPasswordResetSerializer(data=request.data, context={'uid':uid, 'token':token})
-        serializer.is_valid(raise_exception=True)
-        return Response({'msg':'Password Reset Successfully'}, status=status.HTTP_200_OK)
-        
+        if serializer.is_valid():
+            return Response({'status': '200', 'msg': 'password is reset successfully'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'status': '400'}, serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class HrmsUserLogout(APIView):
     permission_classes = [IsAuthenticated]
-    renderer_classes = [HrmsUserRenderer]
+    renderer_classes = [Renderer]
     
     def post(self, request, format=None):
         serializer = HrmsUserLogoutSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response({'msg':'Logout Successfully'}, status=status.HTTP_204_NO_CONTENT)
-           
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status': '204', 'msg':'Logout Successfully'}, status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response({'status': '400'}, serializer.error, status=status.HTTP_400_BAD_REQUEST)
 
 
     

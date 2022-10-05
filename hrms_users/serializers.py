@@ -1,4 +1,3 @@
-from logging import exception
 from tokenize import Token
 from xml.dom import ValidationErr
 from django.forms import ValidationError
