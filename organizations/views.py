@@ -75,7 +75,7 @@ class ViewActivateOrganization(APIView):
 
 
 class CreateOrganization(APIView): 
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
     renderer_classes = [Renderer]
     parser_classes = (MultiPartParser, FormParser)
 
@@ -83,9 +83,9 @@ class CreateOrganization(APIView):
         serializer = CreateOrganizationSerializers(data = request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({'status':201, 'data':serializer.data}, status=status.HTTP_201_CREATED)
+            return Response({'status':201, 'data':serializer.data, 'msg':'Successfully added'}, status=status.HTTP_201_CREATED)
         else:
-            return Response({'status':400, 'data': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'status':400, 'data': serializer.errors, 'msg':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UpdateOrganization(APIView): 
