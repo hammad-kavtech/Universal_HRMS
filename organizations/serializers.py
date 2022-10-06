@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import Organization, GroupHead
 
 class CreateOrganizationSerializers(serializers.ModelSerializer):
-    # image_url = serializers.ImageField(required=False)
+    organization_logo = serializers.ImageField(required=False)
     class Meta:
         model = Organization
         fields = ['organization_name', 'organization_tagline', 'organization_vision', 'organization_mission', 'organization_logo','created_by', 'established_date', 'company_type']
