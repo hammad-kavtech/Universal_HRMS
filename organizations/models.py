@@ -18,7 +18,7 @@ class Organization(models.Model):
 
 
 class GroupHead(models.Model):
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    organization_id = models.ForeignKey(Organization, on_delete=models.CASCADE, blank=True, null=True)
     title = models.CharField(max_length=200)
     type = models.CharField(max_length=200, null=True, blank=True)
     is_status = models.BooleanField(default=True)
