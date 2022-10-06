@@ -15,7 +15,7 @@ class HrmsUsers(AbstractUser):
     is_admin = models.BooleanField(default=False, null=True)
     is_employee = models.BooleanField(default=False, null=True)
     status = models.BooleanField(default=False, null=True)
-    profile_image = models.ImageField(null=True, blank=True, upload_to='profiles/', default='profiles/users-default.png')
+    profile_image = models.ImageField(null=True, blank=True, upload_to='images/', default='')
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
     username = None

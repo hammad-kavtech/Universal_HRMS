@@ -1,14 +1,11 @@
-from logging import raiseExceptions
-from django.shortcuts import render
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from helpers.renderers import Renderer
-from organizations.models import organization
-from hrms_users.models import HrmsUsers
-from hrms_users.views import HrmsUserProfile
-from .serializers import ViewOrganizationSerializers, CreateOrganizationSerializers, UpdateOrganizationSerializers, DeactivateOrganizationSerializers
+from organizations.models import Organization
+from .serializers import ViewOrganizationSerializers, CreateOrganizationSerializers, UpdateOrganizationSerializers, DeactivateOrganizationSerializers, CreateGroupHeadSerializers
+from rest_framework.parsers import MultiPartParser, FormParser
 # Create your views here.
 
 
@@ -18,7 +15,7 @@ class ViewOrganization(APIView):
     renderer_classes = [Renderer]
     def get_object(self, pk):
         try:
-            return organization.objects.get(pk=pk)
+            return Organization.objects.get(pk=pk)
         except:
             return Response("pk doesn't exist")
 
@@ -37,10 +34,14 @@ class ViewOrganization(APIView):
 
 
 # shows all organization
+
+
+
+
 class ViewAllOrganizations(APIView): 
     def get(self, request):
         try:
-            get_organization = organization.objects.all()
+            get_organization = Organization.objects.all()
             serializer = ViewOrganizationSerializers(get_organization, many=True)
             return Response({'status':200,'data':serializer.data})
         except:
@@ -51,9 +52,13 @@ class ViewAllOrganizations(APIView):
 class ViewDeactivateOrganization(APIView):
     def get(self, request):
         try:
-            get_organization = organization.objects.filter(organization_is_active=False)
-            serializer = ViewOrganizationSerializers(get_organization, many=True)
-            return Response({'status':200,'data':serializer.data})
+            val = self.kwargs['val'] 
+            # get_organization = Organization.objects.filter(organization_is_active=False)
+            # serializer = ViewOrganizationSerializers(get_organization, many=True)
+            if val=='all':
+                get_organization = Organization.objects.filter(organization_is_active=False)
+                serializer = ViewOrganizationSerializers(get_organization, many=True)
+                return Response({'status':200,'data':serializer.data})
         except:
             return Response({'status':404, "errors": serializer.errors})
 
@@ -61,7 +66,7 @@ class ViewDeactivateOrganization(APIView):
 class ViewActivateOrganization(APIView):
     def get(self, request):
         try:
-            get_organization = organization.objects.filter(organization_is_active=True)
+            get_organization = Organization.objects.filter(organization_is_active=True)
             serializer = ViewOrganizationSerializers(get_organization, many=True)
             return Response({'status':200,'data':serializer.data})
         except:
@@ -72,6 +77,8 @@ class ViewActivateOrganization(APIView):
 class CreateOrganization(APIView): 
     permission_classes = [IsAuthenticated]
     renderer_classes = [Renderer]
+    parser_classes = (MultiPartParser, FormParser)
+
     def post(self, request):
         serializer = CreateOrganizationSerializers(data = request.data)
         if serializer.is_valid():
@@ -86,7 +93,7 @@ class UpdateOrganization(APIView):
     renderer_classes = [Renderer]
     def get_object(self, pk):
         try:
-            return organization.objects.get(pk=pk)
+            return Organization.objects.get(pk=pk)
         except:
             return Response("pk doesn't exist")
 
@@ -97,7 +104,7 @@ class UpdateOrganization(APIView):
 
     def put(self, request, pk):
         organization_object = self.get_object(pk)
-        serializer = UpdateOrganizationSerializers(organization_object, data = request.data)
+        serializer = UpdateOrganizationSerializers(organization_object, data = request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response({'status':200, 'data': serializer.data}, status=status.HTTP_200_OK)
@@ -127,7 +134,7 @@ class DeactivateOrganization(APIView):
     renderer_classes = [Renderer]
     def get_object(self, pk):
         try:
-            return organization.objects.get(pk=pk)
+            return Organization.objects.get(pk=pk)
         except:
             return Response("pk doesn't exist")
     
@@ -143,3 +150,19 @@ class DeactivateOrganization(APIView):
             return Response({'status':200, 'data': serializer.data}, status=status.HTTP_200_OK)
         except:
             return Response({'status':404 ,'msg': 'Organization doesnot exists or get inactivated successfully'}, status=status.HTTP_404_NOT_FOUND)
+
+
+# class CreateGroupHead():
+
+class CreateGroupHead(APIView):
+    permission_classes = [IsAuthenticated]
+    renderer_classes = [Renderer]
+
+    def post(self, request):
+        serializer = CreateGroupHeadSerializers(data = request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status':201, 'data':serializer.data}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({'status':400, 'data': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
