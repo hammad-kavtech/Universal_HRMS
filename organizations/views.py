@@ -4,8 +4,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from helpers.renderers import Renderer
-from organizations.models import Organization
-from .serializers import ViewOrganizationSerializers, CreateOrganizationSerializers, UpdateOrganizationSerializers, DeactivateOrganizationSerializers, CreateGroupHeadSerializers
+from organizations.models import Organization, GroupHead, OrganizationLocation, OrganizationDepartment, OrganizationPosition
+from .serializers import ViewGroupHeadSerializers, ViewOrganizationSerializers, CreateOrganizationSerializers, UpdateOrganizationSerializers, DeactivateOrganizationSerializers, CreateGroupHeadSerializers, UpdateGroupHeadSerializers, DeactivateGroupHeadSerializers, CreateOrganizationLocationSerializers, UpdateOrganizationLocationSerializers, ViewOrganizationLocationSerializers, DeactivateOrganizationLocationSerializers, ViewOrganizationDepartmentSerializers, UpdateOrganizationDepartmentSerializers, CreateOrganizationDepartmentSerializers, DeactivateOrganizationDepartmentSerializers, ViewOrganizationPositionSerializers, UpdateOrganizationPositionSerializers, CreateOrganizationPositionSerializers, DeactivateOrganizationPositionSerializers
 from rest_framework.parsers import MultiPartParser, FormParser
 # Create your views here.
 
@@ -211,6 +211,224 @@ class OrganizationViewset(viewsets.ModelViewSet):
             obj.organization_is_active = False
             obj.save()
             serializer = DeactivateOrganizationSerializers(obj)
+            return Response({'status':200, 'data': serializer.data}, status=status.HTTP_200_OK)
+        except:
+            return Response({'status':404 ,'msg': 'Organization doesnot exists or get inactivated successfully'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class GroupHeadViewset(viewsets.ModelViewSet):
+    # permission_classes = [IsAuthenticated]
+    # prenderer_classes = [Renderer]
+    
+    def list(self, request):
+        try:
+            obj = GroupHead.objects.all()
+            serializer = ViewGroupHeadSerializers(obj, many=True)
+            return Response({'status':200,'data':serializer.data})
+        except:
+            return Response({'status':404, "errors":  "Not Found"})
+
+    def retrieve(self, request, pk=None):
+        id=pk
+        if id is not None:
+            obj = GroupHead.objects.get(id=id)
+            serializer = ViewGroupHeadSerializers(obj, many=False)
+            return Response({'status':200,'data':serializer.data})
+        else:
+            return Response({'status':404,'data':serializer.errors, 'msg': "Not Found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def create(self, request):
+        serializer = CreateGroupHeadSerializers(data = request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status':201, 'data':serializer.data, 'msg':'Successfully created'}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({'status':404, 'msg':serializer.errors}, status=status.HTTP_404_NOT_FOUND)
+        
+    
+    def update(self, request, pk):
+        id = pk
+        obj = GroupHead.objects.get(pk=id)    
+        serializer = UpdateGroupHeadSerializers(obj, data = request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status':200, 'data': serializer.data, 'msg': 'Updated Successfully'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'status':400, 'errors':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, pk):
+        id = pk
+        obj = GroupHead.objects.get(id=pk)
+        if obj.is_active == False:
+            msg = "Grouphead is already deactivated"
+            return Response({'status':200, 'msg':msg})
+        try:
+            obj.is_active = False
+            obj.save()
+            serializer = DeactivateGroupHeadSerializers(obj, many=False)
+            return Response({'status':200, 'data': serializer.data}, status=status.HTTP_200_OK)
+        except:
+            return Response({'status':404 ,'msg': 'Organization doesnot exists or get inactivated successfully'}, status=status.HTTP_404_NOT_FOUND)
+
+
+# Organization Location Logic
+class OrganizationLocationViewset(viewsets.ModelViewSet):
+    # permission_classes = [IsAuthenticated]
+    # prenderer_classes = [Renderer]
+    def list(self, request):
+        try:
+            obj = OrganizationLocation.objects.all()
+            serializer = ViewOrganizationLocationSerializers(obj, many=True)
+            return Response({'status':200,'data':serializer.data})
+        except:
+            return Response({'status':404, "errors":  "Not Found"})
+
+    def retrieve(self, request, pk=None):
+        id=pk
+        if id is not None:
+            obj = OrganizationLocation.objects.get(id=id)
+            serializer = ViewOrganizationLocationSerializers(obj, many=False)
+            return Response({'status':200,'data':serializer.data})
+        else:
+            return Response({'status':404,'data':serializer.errors, 'msg': "Not Found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def create(self, request):
+        serializer = CreateOrganizationLocationSerializers(data = request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status':201, 'data':serializer.data, 'msg':'Successfully created'}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({'status':404, 'msg':serializer.errors}, status=status.HTTP_404_NOT_FOUND)
+        
+    
+    def update(self, request, pk):
+        id = pk
+        obj = OrganizationLocation.objects.get(pk=id)    
+        serializer = UpdateOrganizationLocationSerializers(obj, data = request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status':200, 'data': serializer.data, 'msg': 'Updated Successfully'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'status':400, 'errors':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, pk):
+        id = pk
+        obj = OrganizationLocation.objects.get(id=pk)
+        if obj.is_active == False:
+            msg = "This location is deactivated not working"
+            return Response({'status':200, 'msg':msg})
+        try:
+            obj.is_active = False
+            obj.save()
+            serializer = DeactivateOrganizationLocationSerializers(obj, many=False)
+            return Response({'status':200, 'data': serializer.data}, status=status.HTTP_200_OK)
+        except:
+            return Response({'status':404 ,'msg': 'Organization doesnot exists or get inactivated successfully'}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+class OrganizationDepartmentViewset(viewsets.ModelViewSet):
+    # permission_classes = [IsAuthenticated]
+    # prenderer_classes = [Renderer]
+    def list(self, request):
+        try:
+            obj = OrganizationDepartment.objects.all()
+            serializer = ViewOrganizationDepartmentSerializers(obj, many=True)
+            return Response({'status':200,'data':serializer.data})
+        except:
+            return Response({'status':404, "errors":  "Not Found"})
+
+    def retrieve(self, request, pk=None):
+        id=pk
+        if id is not None:
+            obj = OrganizationDepartment.objects.get(id=id)
+            serializer = ViewOrganizationDepartmentSerializers(obj, many=False)
+            return Response({'status':200,'data':serializer.data})
+        else:
+            return Response({'status':404,'data':serializer.errors, 'msg': "Not Found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def create(self, request):
+        serializer = CreateOrganizationDepartmentSerializers(data = request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status':201, 'data':serializer.data, 'msg':'Successfully created'}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({'status':404, 'msg':serializer.errors}, status=status.HTTP_404_NOT_FOUND)
+        
+    
+    def update(self, request, pk):
+        id = pk
+        obj = OrganizationDepartment.objects.get(pk=id)    
+        serializer = UpdateOrganizationDepartmentSerializers(obj, data = request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status':200, 'data': serializer.data, 'msg': 'Updated Successfully'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'status':400, 'errors':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, pk):
+        id = pk
+        obj = OrganizationDepartment.objects.get(id=pk)
+        if obj.is_active == False:
+            msg = "This location is deactivated not working"
+            return Response({'status':200, 'msg':msg})
+        try:
+            obj.is_active = False
+            obj.save()
+            serializer = DeactivateOrganizationDepartmentSerializers(obj, many=False)
+            return Response({'status':200, 'data': serializer.data}, status=status.HTTP_200_OK)
+        except:
+            return Response({'status':404 ,'msg': 'Organization doesnot exists or get inactivated successfully'}, status=status.HTTP_404_NOT_FOUND)
+
+class OrganizationPositionViewset(viewsets.ModelViewSet):
+    # permission_classes = [IsAuthenticated]
+    # prenderer_classes = [Renderer]
+    def list(self, request):
+        try:
+            obj = OrganizationPosition.objects.all()
+            serializer = ViewOrganizationPositionSerializers(obj, many=True)
+            return Response({'status':200,'data':serializer.data})
+        except:
+            return Response({'status':404, "errors":  "Not Found"})
+
+    def retrieve(self, request, pk=None):
+        id=pk
+        if id is not None:
+            obj = OrganizationPosition.objects.get(id=id)
+            serializer = ViewOrganizationPositionSerializers(obj, many=False)
+            return Response({'status':200,'data':serializer.data})
+        else:
+            return Response({'status':404,'data':serializer.errors, 'msg': "Not Found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def create(self, request):
+        serializer = CreateOrganizationPositionSerializers(data = request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status':201, 'data':serializer.data, 'msg':'Successfully created'}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({'status':404, 'msg':serializer.errors}, status=status.HTTP_404_NOT_FOUND)
+        
+    
+    def update(self, request, pk):
+        id = pk
+        obj = OrganizationPosition.objects.get(pk=id)    
+        serializer = UpdateOrganizationPositionSerializers(obj, data = request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status':200, 'data': serializer.data, 'msg': 'Updated Successfully'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'status':400, 'errors':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, pk):
+        id = pk
+        obj = OrganizationPosition.objects.get(id=pk)
+        if obj.is_active == False:
+            msg = "This location is deactivated not working"
+            return Response({'status':200, 'msg':msg})
+        try:
+            obj.is_active = False
+            obj.save()
+            serializer = DeactivateOrganizationPositionSerializers(obj, many=False)
             return Response({'status':200, 'data': serializer.data}, status=status.HTTP_200_OK)
         except:
             return Response({'status':404 ,'msg': 'Organization doesnot exists or get inactivated successfully'}, status=status.HTTP_404_NOT_FOUND)

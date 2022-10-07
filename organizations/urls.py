@@ -10,7 +10,7 @@ urlpatterns = [
     path('get_organization/<pk>/', DeactivateOrganization.as_view(), name="deactivate_organization"),
     path('view/all>', ViewAllOrganizations.as_view(), name="view_all_organization"),
     path('view_activate_organization/', ViewActivateOrganization.as_view(), name="view_activate_organization"),
+    #path('view_deactivate_organization/', ViewDeactivateOrganization.as_view(), name="view_deactivate_organization"),
     path('view_deactivate_organization/', ViewDeactivateOrganization.as_view(), name="view_deactivate_organization"),
-    path('view_deactivate_organization/', ViewDeactivateOrganization.as_view(), name="view_deactivate_organization"),
-    path('create/grouphead/', CreateGroupHead.as_view(), name="create_grouphead")
+    # path('create/grouphead/', CreateGroupHead.as_view(), name="create_grouphead")
 ]

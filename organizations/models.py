@@ -27,3 +27,29 @@ class GroupHead(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+class OrganizationLocation(models.Model):
+    organization_id = models.ForeignKey(Organization, on_delete=models.CASCADE, blank=True, null=True)
+    #city_id = models.CharField(max_length=200, null=True, blank=True)
+    latitute = models.DecimalField(max_digits=22, decimal_places=16, blank=True, null=True)
+    longitute = models.DecimalField(max_digits=22, decimal_places=16, blank=True, null=True)
+    address = models.CharField(max_length=200, null=True, blank=True)
+    is_head_office = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class OrganizationDepartment(models.Model):
+    organization_id = models.ForeignKey(Organization, on_delete=models.CASCADE, blank=True, null=True)
+    department_title = models.CharField(max_length=200, null=True, blank=True)
+    department_status = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class OrganizationPosition(models.Model):
+    organization_id = models.ForeignKey(Organization, on_delete=models.CASCADE, blank=True, null=True)
+    position_title = models.CharField(max_length=200, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
