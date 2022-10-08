@@ -4,8 +4,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from helpers.renderers import Renderer
-from organizations.models import Organization, GroupHead, OrganizationLocation, OrganizationDepartment, OrganizationPosition
-from .serializers import ViewGroupHeadSerializers, ViewOrganizationSerializers, CreateOrganizationSerializers, UpdateOrganizationSerializers, DeactivateOrganizationSerializers, CreateGroupHeadSerializers, UpdateGroupHeadSerializers, DeactivateGroupHeadSerializers, CreateOrganizationLocationSerializers, UpdateOrganizationLocationSerializers, ViewOrganizationLocationSerializers, DeactivateOrganizationLocationSerializers, ViewOrganizationDepartmentSerializers, UpdateOrganizationDepartmentSerializers, CreateOrganizationDepartmentSerializers, DeactivateOrganizationDepartmentSerializers, ViewOrganizationPositionSerializers, UpdateOrganizationPositionSerializers, CreateOrganizationPositionSerializers, DeactivateOrganizationPositionSerializers
+from organizations.models import Organization, GroupHead, OrganizationLocation, OrganizationDepartment, OrganizationPosition, StaffClassification
+from .serializers import ViewGroupHeadSerializers, ViewOrganizationSerializers, CreateOrganizationSerializers, UpdateOrganizationSerializers, DeactivateOrganizationSerializers, CreateGroupHeadSerializers, UpdateGroupHeadSerializers, DeactivateGroupHeadSerializers, CreateOrganizationLocationSerializers, UpdateOrganizationLocationSerializers, ViewOrganizationLocationSerializers, DeactivateOrganizationLocationSerializers, ViewOrganizationDepartmentSerializers, UpdateOrganizationDepartmentSerializers, CreateOrganizationDepartmentSerializers, DeactivateOrganizationDepartmentSerializers, ViewOrganizationPositionSerializers, UpdateOrganizationPositionSerializers, CreateOrganizationPositionSerializers, DeactivateOrganizationPositionSerializers, ViewStaffClassificationSerializers, UpdateStaffClassificationSerializers, CreateStaffClassificationSerializers, DeactivateStaffClassificationSerializers
 from rest_framework.parsers import MultiPartParser, FormParser
 # Create your views here.
 
@@ -160,10 +160,10 @@ from rest_framework.parsers import MultiPartParser, FormParser
 
     
 
-
+# Organization Logic
 class OrganizationViewset(viewsets.ModelViewSet):
     # permission_classes = [IsAuthenticated]
-    # prenderer_classes = [Renderer]
+    # renderer_classes = [Renderer]
 
     def list(self, request):
         try:
@@ -216,9 +216,10 @@ class OrganizationViewset(viewsets.ModelViewSet):
             return Response({'status':404 ,'msg': 'Organization doesnot exists or get inactivated successfully'}, status=status.HTTP_404_NOT_FOUND)
 
 
+# Group head logic
 class GroupHeadViewset(viewsets.ModelViewSet):
     # permission_classes = [IsAuthenticated]
-    # prenderer_classes = [Renderer]
+    # renderer_classes = [Renderer]
     
     def list(self, request):
         try:
@@ -274,7 +275,7 @@ class GroupHeadViewset(viewsets.ModelViewSet):
 # Organization Location Logic
 class OrganizationLocationViewset(viewsets.ModelViewSet):
     # permission_classes = [IsAuthenticated]
-    # prenderer_classes = [Renderer]
+    # renderer_classes = [Renderer]
     def list(self, request):
         try:
             obj = OrganizationLocation.objects.all()
@@ -315,7 +316,7 @@ class OrganizationLocationViewset(viewsets.ModelViewSet):
         id = pk
         obj = OrganizationLocation.objects.get(id=pk)
         if obj.is_active == False:
-            msg = "This location is deactivated not working"
+            msg = "This location is already deactivated"
             return Response({'status':200, 'msg':msg})
         try:
             obj.is_active = False
@@ -323,13 +324,13 @@ class OrganizationLocationViewset(viewsets.ModelViewSet):
             serializer = DeactivateOrganizationLocationSerializers(obj, many=False)
             return Response({'status':200, 'data': serializer.data}, status=status.HTTP_200_OK)
         except:
-            return Response({'status':404 ,'msg': 'Organization doesnot exists or get inactivated successfully'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'status':404 ,'msg': 'Location doesnot exists or get inactivated successfully'}, status=status.HTTP_404_NOT_FOUND)
 
 
-
+# organization Department Logic
 class OrganizationDepartmentViewset(viewsets.ModelViewSet):
     # permission_classes = [IsAuthenticated]
-    # prenderer_classes = [Renderer]
+    # renderer_classes = [Renderer]
     def list(self, request):
         try:
             obj = OrganizationDepartment.objects.all()
@@ -380,6 +381,7 @@ class OrganizationDepartmentViewset(viewsets.ModelViewSet):
         except:
             return Response({'status':404 ,'msg': 'Organization doesnot exists or get inactivated successfully'}, status=status.HTTP_404_NOT_FOUND)
 
+# Organization Position Logic
 class OrganizationPositionViewset(viewsets.ModelViewSet):
     # permission_classes = [IsAuthenticated]
     # prenderer_classes = [Renderer]
@@ -429,6 +431,61 @@ class OrganizationPositionViewset(viewsets.ModelViewSet):
             obj.is_active = False
             obj.save()
             serializer = DeactivateOrganizationPositionSerializers(obj, many=False)
+            return Response({'status':200, 'data': serializer.data}, status=status.HTTP_200_OK)
+        except:
+            return Response({'status':404 ,'msg': 'Organization doesnot exists or get inactivated successfully'}, status=status.HTTP_404_NOT_FOUND)
+
+
+# staff classification viewset
+class StaffClassificationViewset(viewsets.ModelViewSet):
+    # permission_classes = [IsAuthenticated]
+    # prenderer_classes = [Renderer]
+    def list(self, request):
+        try:
+            obj = StaffClassification.objects.all()
+            serializer = ViewStaffClassificationSerializers(obj, many=True)
+            return Response({'status':200,'data':serializer.data})
+        except:
+            return Response({'status':404, "errors":  "Not Found"})
+
+    def retrieve(self, request, pk=None):
+        id=pk
+        if id is not None:
+            obj = StaffClassification.objects.get(id=id)
+            serializer = ViewStaffClassificationSerializers(obj, many=False)
+            return Response({'status':200,'data':serializer.data})
+        else:
+            return Response({'status':404,'data':serializer.errors, 'msg': "Not Found"}, status=status.HTTP_404_NOT_FOUND)
+
+    def create(self, request):
+        serializer = CreateStaffClassificationSerializers(data = request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status':201, 'data':serializer.data, 'msg':'Successfully created'}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({'status':404, 'msg':serializer.errors}, status=status.HTTP_404_NOT_FOUND)
+        
+    
+    def update(self, request, pk):
+        id = pk
+        obj = StaffClassification.objects.get(pk=id)    
+        serializer = UpdateStaffClassificationSerializers(obj, data = request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status':200, 'data': serializer.data, 'msg': 'Updated Successfully'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'status':400, 'errors':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, pk):
+        id = pk
+        obj = StaffClassification.objects.get(id=pk)
+        if obj.is_active == False:
+            msg = "This location is deactivated not working"
+            return Response({'status':200, 'msg':msg})
+        try:
+            obj.is_active = False
+            obj.save()
+            serializer = DeactivateStaffClassificationSerializers(obj, many=False)
             return Response({'status':200, 'data': serializer.data}, status=status.HTTP_200_OK)
         except:
             return Response({'status':404 ,'msg': 'Organization doesnot exists or get inactivated successfully'}, status=status.HTTP_404_NOT_FOUND)
