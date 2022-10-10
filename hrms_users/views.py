@@ -16,6 +16,7 @@ def get_tokens_for_user(user):
         'accessToken': str(refresh.access_token),
     }
 
+
 class HrmsUserLogin(APIView):
     renderer_classes = [Renderer]
     def post(self, request, format=None):
@@ -25,8 +26,10 @@ class HrmsUserLogin(APIView):
             password = serializer.data.get('password')
             user = authenticate(email=email, password=password)
             if user is not None:
+                uid = user.id
+                uemail = user.email
                 token = get_tokens_for_user(user)
-                return Response({'status': 200, 'token': token ,'msg':'Login Successful'}, status=status.HTTP_200_OK)
+                return Response({'status': 200, 'token': token, 'uid':uid, 'msg':'Login Successful'}, status=status.HTTP_200_OK)
             else: 
                 return Response({'status': 404, 'errors':{'non_field_errors':['Email or Password is not valid']}}, status=status.HTTP_404_NOT_FOUND)
         else:

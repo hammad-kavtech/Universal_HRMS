@@ -69,7 +69,7 @@ class OrganizationPosition(models.Model):
     position_description = models.TextField(max_length=500, null=True, blank=True)
     is_active = models.BooleanField(default=True)
     department_status = models.BooleanField(default=True)
-    salary_range = models.IntegerField(default=1, validators=[MaxValueValidator(100), MinValueValidator(1)])
+    salary_range = models.IntegerField(default=1, validators=[MaxValueValidator(100000000), MinValueValidator(1)])
     job_description = models.TextField(max_length=1000, null=True, blank=True)
     qualification_level = models.CharField(max_length=200, null=True, blank=True)
     user_experience = models.IntegerField()

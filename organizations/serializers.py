@@ -12,6 +12,7 @@ class ViewOrganizationSerializers(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = '__all__'
+        
  
 class UpdateOrganizationSerializers(serializers.ModelSerializer):
     class Meta:
@@ -104,6 +105,7 @@ class UpdateOrganizationPositionSerializers(serializers.ModelSerializer):
     class Meta:
         model = OrganizationPosition
         exclude =  ('created_at', 'updated_at', 'id')
+
 
 class ViewOrganizationPositionSerializers(serializers.ModelSerializer):
     class Meta:
