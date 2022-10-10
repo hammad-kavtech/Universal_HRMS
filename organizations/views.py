@@ -167,68 +167,75 @@ class OrganizationViewset(viewsets.ModelViewSet):
     # renderer_classes = [Renderer]
 
     def list(self, request):
-        obj = Organization.objects.all()
-        serializer = ViewOrganizationSerializers(obj, many=True)
-        return Response({'status':200,'data':serializer.data, 'msg': 'success'})
-        
+        try:
+            obj = Organization.objects.all()
+            serializer = ViewOrganizationSerializers(obj, many=True)
+            return Response({'status':200,'data':serializer.data, 'msg': 'success'})
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })
 
     def retrieve(self, request, pk=None):
-        id=pk
-        if id is not IntegerField():
-            return Response({'status':404, 'msg': "id is an integer field"})
+        try:
+            id=pk
+            if Organization.objects.filter(pk=id).exists():
+                obj = Organization.objects.get(id=id)
+                if obj.organization_is_active == False:
+                    msg = "Please update the organization status to active"
+                    return Response({'status':200, 'msg': msg})
+                serializer = ViewOrganizationSerializers(obj, many=False)
+                return Response({'status':200, 'data':serializer.data, 'msg':'Successfully added'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'status':404, 'msg': "Organization does not exist in db"}, status=status.HTTP_404_NOT_FOUND)
+        except ValueError:
+            return Response({'status': 404, 'msg': 'Dynamic id entered into url is not of type int' })
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })
 
-        if Organization.objects.filter(id=id).exists():
-            obj = Organization.objects.get(id=id)
-            if obj.organization_is_active == False:
-                msg = "Please update the organization status to active"
-                return Response({'status':200, 'data':serializer.data, 'msg': 'Success'})
-            serializer = ViewOrganizationSerializers(obj, many=False)
-            return Response()
-        else:
-            return Response({'status':404, 'msg': "Organization does not exist in db"}, status=status.HTTP_404_NOT_FOUND)
-    
-        
 
     def create(self, request):
-        serializer = CreateOrganizationSerializers(data = request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'status':201, 'data':serializer.data, 'msg':'Successfully added'}, status=status.HTTP_201_CREATED)
-        else:
-            return Response({'status':400, 'msg': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-    
-    def update(self, request, pk):
-        id = pk
-        if id is not IntegerField():
-            return Response({'status':404, 'msg': "id is an integer field"})
-
-        if Organization.objects.filter(pk=id).exists():
-            obj = Organization.objects.get(pk=id)    
-            serializer = UpdateOrganizationSerializers(obj, data = request.data, partial=True)
+        try:
+            serializer = CreateOrganizationSerializers(data = request.data)
             if serializer.is_valid():
                 serializer.save()
-                return Response({'status':200, 'data': serializer.data, 'msg': 'Updated Successfully'}, status=status.HTTP_200_OK)
+                return Response({'status':201, 'data':serializer.data, 'msg':'Successfully added'}, status=status.HTTP_201_CREATED)
             else:
-                return Response({'status':400, 'msg':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response({'status':404, 'msg': 'This Organization does not exists'})
+                return Response({'status':400, 'msg': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })
+
+    def update(self, request, pk):
+        try:
+            id = pk
+            if Organization.objects.filter(pk=id).exists():
+                obj = Organization.objects.get(pk=id)    
+                serializer = UpdateOrganizationSerializers(obj, data = request.data, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response({'status':200, 'data': serializer.data, 'msg': 'Updated Successfully'}, status=status.HTTP_200_OK)
+                else:
+                    return Response({'status':400, 'msg':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({'status':404, 'msg': 'This Organization does not exists'})
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })
 
     def destroy(self, request, pk):
-        id = pk
-        if id is not IntegerField():
-            return Response({'status':404, 'msg': "id is an integer field"})
+        try:
+            id = pk
+            if Organization.objects.filter(pk=id).exists():
+                obj = Organization.objects.get(id=pk)
+                if obj.organization_is_active == False:
+                    msg = "Organization is already deactivated"
+                    return Response({'status':200, 'msg':msg})
+                obj.organization_is_active = False
+                obj.save()
+                serializer = DeactivateOrganizationSerializers(obj)
+                return Response({'status':200, 'data': serializer.data, 'msg': 'Success'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'status':404, 'msg': 'This Organization does not exists'})
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })
 
-        if Organization.objects.filter(pk=id).exists():
-            obj = Organization.objects.get(id=pk)
-            if obj.organization_is_active == False:
-                msg = "Organization is already deactivated"
-                return Response({'status':200, 'msg':msg})
-            obj.organization_is_active = False
-            obj.save()
-            serializer = DeactivateOrganizationSerializers(obj)
-            return Response({'status':200, 'data': serializer.data, 'msg': 'Success'}, status=status.HTTP_200_OK)
-        else:
-             return Response({'status':404, 'msg': 'This Organization does not exists'})
 
 # Group head logic
 class GroupHeadViewset(viewsets.ModelViewSet):
@@ -236,197 +243,221 @@ class GroupHeadViewset(viewsets.ModelViewSet):
     # renderer_classes = [Renderer]
     
     def list(self, request):
-        obj = GroupHead.objects.all()
-        serializer = ViewGroupHeadSerializers(obj, many=True)
-        return Response({'status':200, 'data':serializer.data, 'msg': 'Success'})
+        try:    
+            obj = GroupHead.objects.all()
+            serializer = ViewGroupHeadSerializers(obj, many=True)
+            return Response({'status':200, 'data':serializer.data, 'msg': 'Success'})
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' }) 
+
 
     def retrieve(self, request, pk=None):
-        id=pk
-        if id is not IntegerField():
-            return Response({'status':404, 'msg': "id is an integer field"})
-
-        if GroupHead.objects.filter(id=pk).exists():
-            obj = GroupHead.objects.get(id=id)
-            serializer = ViewGroupHeadSerializers(obj, many=False)
-            return Response({'status':200,'data':serializer.data, 'msg': 'Success'})
-        else:
-            return Response({'status':404, 'msg': 'This Grouphead does not exists in database'})   
+        try:
+            id=pk
+            if GroupHead.objects.filter(pk=id).exists():
+                obj = GroupHead.objects.get(id=id)
+                serializer = ViewGroupHeadSerializers(obj, many=False)
+                return Response({'status':200,'data':serializer.data, 'msg': 'Success'})
+            else:
+                return Response({'status':404, 'msg': 'This Grouphead does not exists in database'})   
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })  
      
 
     def create(self, request):
-        serializer = CreateGroupHeadSerializers(data = request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'status':201, 'data':serializer.data, 'msg':'Successfully created'}, status=status.HTTP_201_CREATED)
-        else:
-            return Response({'status':404, 'msg':serializer.errors}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            serializer = CreateGroupHeadSerializers(data = request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'status':201, 'data':serializer.data, 'msg':'Successfully created'}, status=status.HTTP_201_CREATED)
+            else:
+                return Response({'status':404, 'msg':serializer.errors}, status=status.HTTP_404_NOT_FOUND)
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })
         
     
     def update(self, request, pk):
-        id = pk
-        if id is not IntegerField():
-            return Response({'status':404, 'msg': "id is an integer field"})
-
-        if GroupHead.objects.filter(id=pk).exists():
-            obj = GroupHead.objects.get(pk=id)    
-            serializer = UpdateGroupHeadSerializers(obj, data = request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response({'status':200, 'data': serializer.data, 'msg': 'Updated Successfully'}, status=status.HTTP_200_OK)
+        try:
+            id = pk
+            if GroupHead.objects.filter(pk=id).exists():
+                obj = GroupHead.objects.get(pk=id)    
+                serializer = UpdateGroupHeadSerializers(obj, data = request.data, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response({'status':200, 'data': serializer.data, 'msg': 'Updated Successfully'}, status=status.HTTP_200_OK)
+                else:
+                    return Response({'status':400, 'msg':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
             else:
-                return Response({'status':400, 'msg':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response({'status':404, 'msg':serializer.errors}, status=status.HTTP_404_NOT_FOUND)
+                return Response({'status':404, 'msg': 'Grouphead with this index does not exist in db'}, status=status.HTTP_404_NOT_FOUND)
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })
 
     def destroy(self, request, pk):
-        id = pk
-        if id is not IntegerField():
-            return Response({'status':404, 'msg': "id is an integer field"})
+        try:
+            id = pk
+            if GroupHead.objects.filter(pk=id).exists():
+                obj = GroupHead.objects.get(id=id)
+                if obj.is_active == False:
+                    msg = "GroupHead is already deactivated"
+                    return Response({'status':200, 'msg':msg})
+                obj.is_active = False
+                obj.save()
+                serializer = DeactivateGroupHeadSerializers(obj)
+                return Response({'status':200, 'data': serializer.data, 'msg': 'Success'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'status':404, 'msg': 'This Organization does not exists'})
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })
 
-        if GroupHead.objects.filter(pk=id).exists():
-            obj = GroupHead.objects.get(id=pk)
-            if obj.is_active == False:
-                msg = "GroupHead is already deactivated"
-                return Response({'status':200, 'msg':msg})
-            obj.organization_is_active = False
-            obj.save()
-            serializer = DeactivateGroupHeadSerializers(obj)
-            return Response({'status':200, 'data': serializer.data, 'msg': 'Success'}, status=status.HTTP_200_OK)
-        else:
-             return Response({'status':404, 'msg': 'This Organization does not exists'})
-        
 
 # Organization Location Logic
 class OrganizationLocationViewset(viewsets.ModelViewSet):
     # permission_classes = [IsAuthenticated]
     # renderer_classes = [Renderer]
     def list(self, request):
-        obj = OrganizationLocation.objects.all()
-        serializer = ViewOrganizationLocationSerializers(obj, many=True)
-        return Response({'status':200,'data':serializer.data, 'msg': 'Success'})
+        try:
+            obj = OrganizationLocation.objects.all()
+            serializer = ViewOrganizationLocationSerializers(obj, many=True)
+            return Response({'status':200,'data':serializer.data, 'msg': 'Success'})
+        except:
+           return Response({'status': 400, 'msg': 'Something went wrong' })
+ 
 
     def retrieve(self, request, pk=None):
-        id=pk
-        if id is not IntegerField():
-            return Response({'status':404, 'errors': "id is an integer field"})
-        
-        if OrganizationLocation.objects.filter(id=id).exists():
-            obj = OrganizationLocation.objects.get(id=id)
-            serializer = ViewOrganizationLocationSerializers(obj, many=False)
-            return Response({'status':200,'data':serializer.data, 'msg': 'Success'})
-        else:
-            return Response({'status':404, 'msg': 'id does not exists in db'})
-    
+        try:
+            id=pk
+            if OrganizationLocation.objects.filter(pk=id).exists():
+                obj = OrganizationLocation.objects.get(id=id)
+                serializer = ViewOrganizationLocationSerializers(obj, many=False)
+                return Response({'status':200,'data':serializer.data, 'msg': 'Success'})
+            else:
+                return Response({'status':404, 'msg': 'id does not exists in db'})
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })
 
     def create(self, request):
-        serializer = CreateOrganizationLocationSerializers(data = request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'status':201, 'data':serializer.data, 'msg':'Successfully created'}, status=status.HTTP_201_CREATED)
-        else:
-            return Response({'status':404, 'msg':serializer.errors}, status=status.HTTP_404_NOT_FOUND)
-        
-    
-    def update(self, request, pk):
-        id = pk
-        if id is not IntegerField():
-            return Response({'status':404, 'errors': "id is an integer field"})
-
-        if OrganizationLocation.objects.filter(id=id).exists():
-            obj = OrganizationLocation.objects.get(pk=id)    
-            serializer = UpdateOrganizationLocationSerializers(obj, data = request.data, partial=True)
+        try:
+            serializer = CreateOrganizationLocationSerializers(data = request.data)
             if serializer.is_valid():
                 serializer.save()
-                return Response({'status':200, 'data': serializer.data, 'msg': 'Updated Successfully'}, status=status.HTTP_200_OK)
+                return Response({'status':201, 'data':serializer.data, 'msg':'Successfully created'}, status=status.HTTP_201_CREATED)
             else:
-                return Response({'status':400, 'msg':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response({'status':404, 'msg': 'This id does not exists in db'})
+                return Response({'status':404, 'msg':serializer.errors}, status=status.HTTP_404_NOT_FOUND)
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })
+    
+    def update(self, request, pk):
+        try:
+            id = pk
+            if OrganizationLocation.objects.filter(pk=id).exists():
+                obj = OrganizationLocation.objects.get(pk=id)    
+                serializer = UpdateOrganizationLocationSerializers(obj, data = request.data, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response({'status':200, 'data': serializer.data, 'msg': 'Updated Successfully'}, status=status.HTTP_200_OK)
+                else:
+                    return Response({'status':400, 'msg':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({'status':404, 'msg': 'This id does not exists in db'})
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })
 
     def destroy(self, request, pk):
-        id = pk
-        if id is not IntegerField():
-            return Response({'status':404, 'data': "id is an integer field"})
-
-        obj = OrganizationLocation.objects.get(id=pk)
-        if obj.is_active == False:
-            msg = "This location is already deactivated"
-            return Response({'status':200, 'msg':msg})
-        
-        if OrganizationLocation.objects.filter(id=id).exists():
-            obj.is_active = False
-            obj.save()
-            serializer = DeactivateOrganizationLocationSerializers(obj, many=False)
-            return Response({'status':200, 'data': serializer.data, 'msg': 'Success'}, status=status.HTTP_200_OK)
-        else:
-            return Response({'status':404, 'msg': "This id does not exist in db"})
-
-
+        try:
+            id = pk
+            if OrganizationLocation.objects.filter(pk=id).exists():
+                obj = OrganizationLocation.objects.get(id=pk)
+                if obj.is_active == False:
+                    msg = "This location is already deactivated"
+                    return Response({'status':200, 'msg':msg})
+                obj.is_active = False
+                obj.save()
+                serializer = DeactivateOrganizationLocationSerializers(obj, many=False)
+                return Response({'status':200, 'data': serializer.data, 'msg': 'Success'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'status':404, 'msg': "This id does not exist in db"})
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })
 
 # organization Department Logic
 class OrganizationDepartmentViewset(viewsets.ModelViewSet):
     # permission_classes = [IsAuthenticated]
     # renderer_classes = [Renderer]
     def list(self, request):
-        obj = OrganizationDepartment.objects.all()
-        serializer = ViewOrganizationDepartmentSerializers(obj, many=True)
-        return Response({'status':200, 'data':serializer.data, 'msg': 'Success'})
+        try:
+            obj = OrganizationDepartment.objects.all()
+            serializer = ViewOrganizationDepartmentSerializers(obj, many=True)
+            return Response({'status':200, 'data':serializer.data, 'msg': 'Success'})
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })
     
 
     def retrieve(self, request, pk=None):
-        id=pk
-        if id is not IntegerField():
-            return Response({'status':404, 'msg': "id is an integer field"})
-        
-        if OrganizationDepartment.objects.filter(id=id).exists():
-            obj = OrganizationDepartment.objects.get(id=id)
-            serializer = ViewOrganizationDepartmentSerializers(obj, many=False)
-            return Response({'status':200, 'data':serializer.data, 'msg': 'Success'})
-        else:
-            return Response({'status':404, 'msg': "Department does not exist at this index"}, status=status.HTTP_404_NOT_FOUND)
-    
+        try:
+            id=pk
+            if id is not IntegerField():
+                return Response({'status':404, 'msg': "id is an integer field"})
+            
+            if OrganizationDepartment.objects.filter(pk=id).exists():
+                obj = OrganizationDepartment.objects.get(id=id)
+                serializer = ViewOrganizationDepartmentSerializers(obj, many=False)
+                return Response({'status':200, 'data':serializer.data, 'msg': 'Success'})
+            else:
+                return Response({'status':404, 'msg': "Department does not exist at this index"}, status=status.HTTP_404_NOT_FOUND)
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })
 
     def create(self, request):
-        serializer = CreateOrganizationDepartmentSerializers(data = request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'status':201, 'data':serializer.data, 'msg':'Successfully created'}, status=status.HTTP_201_CREATED)
-        else:
-            return Response({'status':404, 'msg':serializer.errors}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            serializer = CreateOrganizationDepartmentSerializers(data = request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'status':201, 'data':serializer.data, 'msg':'Successfully created'}, status=status.HTTP_201_CREATED)
+            else:
+                return Response({'status':404, 'msg':serializer.errors}, status=status.HTTP_404_NOT_FOUND)
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })
         
     
     def update(self, request, pk):
-        id = pk
-        if id is not IntegerField():
-            return Response({'status':404, 'msg': "id is an integer field"})
+        try:
+            id = pk
+            if id is not IntegerField():
+                return Response({'status':404, 'msg': "id is an integer field"})
 
-        if OrganizationDepartment.objects.filter(id=id).exists():    
-            obj = OrganizationDepartment.objects.get(pk=id)    
-            serializer = UpdateOrganizationDepartmentSerializers(obj, data = request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response({'status':200, 'data': serializer.data, 'msg': 'Updated Successfully'}, status=status.HTTP_200_OK)
+            if OrganizationDepartment.objects.filter(pk=id).exists():    
+                obj = OrganizationDepartment.objects.get(pk=id)    
+                serializer = UpdateOrganizationDepartmentSerializers(obj, data = request.data, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response({'status':200, 'data': serializer.data, 'msg': 'Updated Successfully'}, status=status.HTTP_200_OK)
+                else:
+                    return Response({'status':400, 'errors':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
             else:
-                return Response({'status':400, 'errors':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-           return Response({'status':404, 'msg': "Department does not exist at this index"}, status=status.HTTP_404_NOT_FOUND) 
+                return Response({'status':404, 'msg': "Department does not exist at this index"}, status=status.HTTP_404_NOT_FOUND) 
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })
+
 
     def destroy(self, request, pk):
-        id = pk
-        if id is not IntegerField():
-            return Response({'status':404, 'errors': "id is an integer field"})
-        obj = OrganizationDepartment.objects.get(id=pk)
-        if obj.is_active == False:
-            msg = "This Department is already deactivated"
-            return Response({'status':200, 'msg':msg})
-       
-        if OrganizationDepartment.objects.filter(id=id).exists():    
-            obj.is_active = False
-            obj.save()
-            serializer = DeactivateOrganizationDepartmentSerializers(obj, many=False)
-            return Response({'status':200, 'data': serializer.data}, status=status.HTTP_200_OK)
-        else:
-            return Response({'status':404, 'msg': "Department does not exist at this index"}, status=status.HTTP_404_NOT_FOUND) 
+        try:
+            id = pk
+            if id is not IntegerField():
+                return Response({'status':404, 'errors': "id is an integer field"})
+            obj = OrganizationDepartment.objects.get(id=pk)
+            if obj.is_active == False:
+                msg = "This Department is already deactivated"
+                return Response({'status':200, 'msg':msg})
+        
+            if OrganizationDepartment.objects.filter(pk=id).exists():    
+                obj.is_active = False
+                obj.save()
+                serializer = DeactivateOrganizationDepartmentSerializers(obj, many=False)
+                return Response({'status':200, 'data': serializer.data}, status=status.HTTP_200_OK)
+            else:
+                return Response({'status':404, 'msg': "Department does not exist at this index"}, status=status.HTTP_404_NOT_FOUND) 
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })
             
 
 # Organization Position Logic
@@ -434,118 +465,144 @@ class OrganizationPositionViewset(viewsets.ModelViewSet):
     # permission_classes = [IsAuthenticated]
     # prenderer_classes = [Renderer]
     def list(self, request):  
-        obj = OrganizationPosition.objects.all()
-        serializer = ViewOrganizationPositionSerializers(obj, many=True)
-        return Response({'status':200,'data':serializer.data, 'msg': 'Success'})
-    
-    def retrieve(self, request, pk=None):
-        id=pk
-        if id is not IntegerField():
-            return Response({'status':404, 'msg': "id is an integer field"})
-        if OrganizationPosition.objects.filter(id=id).exists():  
-            obj = OrganizationPosition.objects.get(id=id)
-            serializer = ViewOrganizationPositionSerializers(obj, many=False)
+        try:
+            obj = OrganizationPosition.objects.all()
+            serializer = ViewOrganizationPositionSerializers(obj, many=True)
             return Response({'status':200,'data':serializer.data, 'msg': 'Success'})
-        else:
-            return Response({'status':404, 'msg': "Position does not exist at this index"}, status=status.HTTP_404_NOT_FOUND) 
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })
+
+
+    def retrieve(self, request, pk=None):
+        try:
+            id=pk        
+            if OrganizationPosition.objects.filter(pk=id).exists():  
+                obj = OrganizationPosition.objects.get(id=id)
+                serializer = ViewOrganizationPositionSerializers(obj, many=False)
+                return Response({'status':200,'data':serializer.data, 'msg': 'Success'})
+            else:
+                return Response({'status':404, 'msg': "Position does not exist at this index"}, status=status.HTTP_404_NOT_FOUND) 
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })
+
 
     def create(self, request):
-        serializer = CreateOrganizationPositionSerializers(data = request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'status':201, 'data':serializer.data, 'msg':'Successfully created'}, status=status.HTTP_201_CREATED)
-        else:
-            return Response({'status':404, 'msg':serializer.errors}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            serializer = CreateOrganizationPositionSerializers(data = request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'status':201, 'data':serializer.data, 'msg':'Successfully created'}, status=status.HTTP_201_CREATED)
+            else:
+                return Response({'status':404, 'msg':serializer.errors}, status=status.HTTP_404_NOT_FOUND)
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })
         
     
     def update(self, request, pk):
-        id = pk
-        if id is not IntegerField():
-            return Response({'status':404, 'errors': "id is an integer field"})
-        
-        if OrganizationPosition.objects.filter(id=id).exists():
-            obj = OrganizationPosition.objects.get(pk=id)    
-            serializer = UpdateOrganizationPositionSerializers(obj, data = request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response({'status':200, 'data': serializer.data, 'msg': 'Updated Successfully'}, status=status.HTTP_200_OK)
+        try:
+            id = pk
+            if OrganizationPosition.objects.filter(pk=id).exists():
+                obj = OrganizationPosition.objects.get(pk=id)    
+                serializer = UpdateOrganizationPositionSerializers(obj, data = request.data, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response({'status':200, 'data': serializer.data, 'msg': 'Updated Successfully'}, status=status.HTTP_200_OK)
+                else:
+                    return Response({'status':400, 'msg':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
             else:
-                return Response({'status':400, 'msg':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response({'status':404, 'msg': "Position does not exist at this index"}, status=status.HTTP_404_NOT_FOUND) 
+                return Response({'status':404, 'msg': "Position does not exist at this index"}, status=status.HTTP_404_NOT_FOUND) 
+        except:
+           return Response({'status': 400, 'msg': 'Something went wrong' })
 
 
     def destroy(self, request, pk):
-        id = pk
-        if id is not IntegerField():
-            return Response({'status':404, 'errors': "id is an integer field"})
-        obj = OrganizationPosition.objects.get(id=pk)
-        if obj.is_active == False:
-            msg = "This Position is already deactivated"
-            return Response({'status':200, 'msg':msg})
+        try:
+            id = pk
+            if OrganizationPosition.objects.filter(pk=id).exists(): 
+                obj = OrganizationPosition.objects.get(pk=id)
+                if obj.is_active == False:
+                    msg = "This Position is already deactivated"
+                    return Response({'status':200, 'msg':msg})
         
-        if OrganizationPosition.objects.filter(id=id).exists(): 
-            obj.is_active = False
-            obj.save()
-            serializer = DeactivateOrganizationPositionSerializers(obj, many=False)
-            return Response({'status':200, 'data': serializer.data, 'msg': 'Success'}, status=status.HTTP_200_OK)
-        else:
-            return Response({'status':404, 'msg': "Position does not exist at this index"}, status=status.HTTP_404_NOT_FOUND) 
+                obj.is_active = False
+                obj.save()
+                serializer = DeactivateOrganizationPositionSerializers(obj, many=False)
+                return Response({'status':200, 'data': serializer.data, 'msg': 'Success'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'status':404, 'msg': "Position does not exist at this index"}, status=status.HTTP_404_NOT_FOUND) 
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })
+
 
 # staff classification viewset
 class StaffClassificationViewset(viewsets.ModelViewSet):
     # permission_classes = [IsAuthenticated]
     # prenderer_classes = [Renderer]
     def list(self, request):   
-        obj = StaffClassification.objects.all()
-        serializer = ViewStaffClassificationSerializers(obj, many=True)
-        return Response({'status':200,'data':serializer.data})
-    
-
-    def retrieve(self, request, pk=None):
-        id=pk
-        if id is not IntegerField():
-            return Response({'status':404, 'errors': "id is an integer field"})
-        if StaffClassification.objects.filter(id=id).exists(): 
-            obj = StaffClassification.objects.get(id=id)
-            serializer = ViewStaffClassificationSerializers(obj, many=False)
+        try:
+            obj = StaffClassification.objects.all()
+            serializer = ViewStaffClassificationSerializers(obj, many=True)
             return Response({'status':200,'data':serializer.data})
-        else:
-            return Response({'status':404,'data':serializer.errors, 'msg': "Not Found"}, status=status.HTTP_404_NOT_FOUND)
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })
+    
+    def retrieve(self, request, pk=None):
+        try:
+            id=pk
+            if StaffClassification.objects.filter(pk=id).exists(): 
+                obj = StaffClassification.objects.get(id=id)
+                serializer = ViewStaffClassificationSerializers(obj, many=False)
+                return Response({'status':200,'data':serializer.data, 'msg': 'Success'})
+            else:
+                return Response({'status':404, 'msg': 'Staff does not exist at this position'}, status=status.HTTP_404_NOT_FOUND)
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })
 
     def create(self, request):
-        serializer = CreateStaffClassificationSerializers(data = request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'status':201, 'data':serializer.data, 'msg':'Successfully created'}, status=status.HTTP_201_CREATED)
-        else:
-            return Response({'status':404, 'msg':serializer.errors}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            serializer = CreateStaffClassificationSerializers(data = request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'status':201, 'data':serializer.data, 'msg':'Successfully created'}, status=status.HTTP_201_CREATED)
+            else:
+                return Response({'status':404, 'msg':serializer.errors}, status=status.HTTP_404_NOT_FOUND)
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })
         
     
     def update(self, request, pk):
-        id = pk
-        if id is not IntegerField():
-            return Response({'status':404, 'errors': "id is an integer field"})
-        obj = StaffClassification.objects.get(pk=id)    
-        serializer = UpdateStaffClassificationSerializers(obj, data = request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'status':200, 'data': serializer.data, 'msg': 'Updated Successfully'}, status=status.HTTP_200_OK)
-        else:
-            return Response({'status':400, 'errors':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            id = pk
+        
+            if StaffClassification.objects.filter(pk=id).exists(): 
+                obj = StaffClassification.objects.get(pk=id)    
+                serializer = UpdateStaffClassificationSerializers(obj, data = request.data, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response({'status':200, 'data': serializer.data, 'msg': 'Updated Successfully'}, status=status.HTTP_200_OK)
+                else:
+                    return Response({'status':400, 'errors':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({'status':404, 'msg': 'Staff does not exist at this index'}, status=status.HTTP_404_NOT_FOUND)  
+        except:
+            return Response({'status': 400, 'msg': 'Something went wrong' })
+                 
+
 
     def destroy(self, request, pk):
-        id = pk
-        if id is not IntegerField():
-            return Response({'status':404, 'errors': "id is an integer field"})
-        obj = StaffClassification.objects.get(id=pk)
-        if obj.is_active == False:
-            msg = "This location is deactivated not working"
-            return Response({'status':200, 'msg':msg})
         try:
-            obj.is_active = False
-            obj.save()
-            serializer = DeactivateStaffClassificationSerializers(obj, many=False)
-            return Response({'status':200, 'data': serializer.data}, status=status.HTTP_200_OK)
+            id = pk
+            if StaffClassification.objects.filter(pk=id).exists(): 
+                obj = StaffClassification.objects.get(id=pk)
+                if obj.is_active == False:
+                    msg = "This location is deactivated not working"
+                    return Response({'status':200, 'msg':msg})
+                serializer = DeactivateStaffClassificationSerializers(obj, many=False)
+                obj.is_active = False
+                obj.save()
+            
+                return Response({'status':200, 'data': serializer.data}, status=status.HTTP_200_OK)
+            else:
+                return Response({'status':404, 'msg': 'Staff does not exist at this index'}, status=status.HTTP_404_NOT_FOUND) 
         except:
-            return Response({'status':404 ,'msg': 'Organization doesnot exists or get inactivated successfully'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'status': 400, 'msg': 'Something went wrong' })
