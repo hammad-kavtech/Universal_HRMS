@@ -17,13 +17,13 @@ class GroupHeadSerializers(serializers.ModelSerializer):
 class OrganizationLocationSerializers(serializers.ModelSerializer):
     class Meta:
         model = OrganizationLocation
-        exclude =  '__all__'
+        fields =  '__all__'
 
 
 class OrganizationDepartmentSerializers(serializers.ModelSerializer):
     class Meta:
         model = OrganizationDepartment
-        exclude = '__all__'
+        fields = '__all__'
 
 
 
