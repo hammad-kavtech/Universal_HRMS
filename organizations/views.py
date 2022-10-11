@@ -1,3 +1,4 @@
+from asyncio.windows_events import NULL
 from django.forms import IntegerField
 from rest_framework import status
 from rest_framework import viewsets
@@ -162,6 +163,11 @@ from rest_framework.parsers import MultiPartParser, FormParser
 # def getApiArr(self, code, message=''):
 #     data = {'status': code, 'message': message}
 #     return data
+
+def successMsg():
+    
+    return ({'status': 200, 'data': '', 'message': 'Successfully get the response', 'system_error_message': '' })
+    
     
 
 # Organization Logic
@@ -170,15 +176,21 @@ class OrganizationViewset(viewsets.ModelViewSet):
     # renderer_classes = [Renderer]
     
     def list(self, request):
+        api_response = successMsg()
+        
         try:
-            # c=200
-            # m= 'h'
-            # context = getApiArr(self, c, m)
+            
             obj = Organization.objects.all()
             serializer = OrganizationSerializers(obj, many=True)
-            return Response({'status': 200, 'data':serializer.data, 'msg': 'success'})
-        except:
-            return Response({'status': 400, 'msg': 'Something went wrong' })
+            api_response['data'] = serializer.data
+            api_response['status'] = status.HTTP_200_OK
+            return Response(api_response)
+            #return Response({'status': 200, 'data':serializer.data, 'msg': 'success'})
+        except Exception as e:
+            api_response['status'] = 404
+            api_response['system_error_message'] = str(e)
+            api_response['message'] = ''
+            return Response(api_response)
 
     def retrieve(self, request, pk=None):
         try:
