@@ -6,13 +6,13 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 def upload_to(instance, filename):
     return 'images/{filename}'.format(filename=filename)
 class Organization(models.Model):
+    user_id = models.ForeignKey(HrmsUsers, on_delete=models.CASCADE, default=1)
     organization_name = models.CharField(max_length=200, unique=True)
     organization_tagline = models.TextField(max_length=300, null=True, blank=True)
     organization_vision = models.TextField(max_length=300, null=True, blank=True)
     organization_mission = models.CharField(max_length=200, null=True, blank=True)
     organization_logo = models.ImageField(null=True, blank=True, upload_to=upload_to, default='')
-    organization_is_active = models.BooleanField(default=True)
-    created_by = models.ForeignKey(HrmsUsers, on_delete=models.CASCADE, blank=True, null=True)
+    organization_is_active = models.BooleanField(default=1)
     established_date =  models.CharField(max_length=200, null=True, blank=True)
     organization_type = models.CharField(max_length=200, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -60,7 +60,8 @@ class StaffClassification(models.Model):
     organization_id = models.ForeignKey(Organization, on_delete=models.CASCADE)
     technical_title = models.CharField(max_length=200, blank=True, null=True)
     non_technical_title = models.CharField(max_length=200, blank=True, null=True)
-    title = models.CharField(max_length=200, blank=True, null=True)
+    title = models.CharField(max_length=200, default="auto title")
+    level = models.IntegerField(default=1)
     is_status = models.BooleanField(default=1)
     is_active = models.BooleanField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -79,5 +80,8 @@ class OrganizationPosition(models.Model):
     user_experience = models.FloatField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+
 
 

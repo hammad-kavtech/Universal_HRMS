@@ -159,18 +159,24 @@ from rest_framework.parsers import MultiPartParser, FormParser
 
 
 
+# def getApiArr(self, code, message=''):
+#     data = {'status': code, 'message': message}
+#     return data
     
 
 # Organization Logic
 class OrganizationViewset(viewsets.ModelViewSet):
     # permission_classes = [IsAuthenticated]
     # renderer_classes = [Renderer]
-
+    
     def list(self, request):
         try:
+            # c=200
+            # m= 'h'
+            # context = getApiArr(self, c, m)
             obj = Organization.objects.all()
             serializer = OrganizationSerializers(obj, many=True)
-            return Response({'status':200,'data':serializer.data, 'msg': 'success'})
+            return Response({'status': 200, 'data':serializer.data, 'msg': 'success'})
         except:
             return Response({'status': 400, 'msg': 'Something went wrong' })
 
@@ -181,7 +187,7 @@ class OrganizationViewset(viewsets.ModelViewSet):
                 obj = Organization.objects.get(id=id)
                 if obj.organization_is_active == False:
                     msg = "Please update the organization status to active"
-                    return Response({'status':200, 'msg': msg})
+                    return Response({'status':400, 'msg': msg})
                 serializer = OrganizationSerializers(obj, many=False)
                 return Response({'status':200, 'data':serializer.data, 'msg':'Successfully added'}, status=status.HTTP_200_OK)
             else:
@@ -207,7 +213,7 @@ class OrganizationViewset(viewsets.ModelViewSet):
         try:
             id = pk
             if Organization.objects.filter(pk=id).exists():
-                obj = Organization.objects.get(pk=id)    
+                obj = Organization.objects.get(pk=id)  
                 serializer = OrganizationSerializers(obj, data = request.data, partial=True)
                 if serializer.is_valid():
                     serializer.save()
@@ -241,15 +247,6 @@ class OrganizationViewset(viewsets.ModelViewSet):
 class GroupHeadViewset(viewsets.ModelViewSet):
     # permission_classes = [IsAuthenticated]
     # renderer_classes = [Renderer]
-    
-    def get(self, request, pk):
-        obj = GroupHead.objects.get(id=id)   
-        if obj.organization_id.exists():
-            if obj.organization_id.organization_is_active == False:
-                return Response({'status':200, 'msg': 'Organization does not exist'})
-        else:
-            return Response({'status':404, 'msg': 'This Grouphead does not exists in database'})  
-
 
     def list(self, request):
         try:    
@@ -293,6 +290,7 @@ class GroupHeadViewset(viewsets.ModelViewSet):
                 obj = GroupHead.objects.get(pk=id)    
                 if obj.organization_id.organization_is_active == False:
                     return Response({'status':400, 'msg': 'Activate the organization first'})
+
                 serializer = GroupHeadSerializers(obj, data = request.data, partial=True)
                 if serializer.is_valid():
                     serializer.save()
@@ -528,6 +526,8 @@ class OrganizationPositionViewset(viewsets.ModelViewSet):
 
 
     def destroy(self, request, pk):
+        data = {'status'}
+        
         try:
             id = pk
             if OrganizationPosition.objects.filter(pk=id).exists(): 
@@ -554,7 +554,7 @@ class StaffClassificationViewset(viewsets.ModelViewSet):
         try:
             obj = StaffClassification.objects.all()
             serializer = StaffClassificationSerializers(obj, many=True)
-            return Response({'status':200,'data':serializer.data})
+            return Response({'status':200,'data':serializer.data, 'msg': 'success'}) 
         except:
             return Response({'status': 400, 'msg': 'Something went wrong' })
     
