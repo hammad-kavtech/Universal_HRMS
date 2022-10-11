@@ -111,13 +111,15 @@ class HrmsUserLogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
     def validate(self, attrs):
         try:
-            self.token = attrs['refresh']  
+            self.token = attrs['refresh']
             return attrs     
         except TokenError:
             raise Exception("Not valid token")
 
     def save(self, **kwargs):
         RefreshToken(self.token).blacklist()
+
+
         
 
     

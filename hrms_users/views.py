@@ -83,7 +83,7 @@ class HrmsUserLogout(APIView):
         serializer = HrmsUserLogoutSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({'status': 204}, status=status.HTTP_204_NO_CONTENT)
+            return Response({'status': 204, 'data': serializer.errors, 'msg': 'Successfully Logout'}, status=status.HTTP_204_NO_CONTENT)
         else:
             return Response({'status': 400, 'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 

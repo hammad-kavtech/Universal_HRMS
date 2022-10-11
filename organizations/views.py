@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from helpers.renderers import Renderer
 from organizations.models import Organization, GroupHead, OrganizationLocation, OrganizationDepartment, OrganizationPosition, StaffClassification
-from .serializers import ViewGroupHeadSerializers, ViewOrganizationSerializers, CreateOrganizationSerializers, UpdateOrganizationSerializers, DeactivateOrganizationSerializers, CreateGroupHeadSerializers, UpdateGroupHeadSerializers, DeactivateGroupHeadSerializers, CreateOrganizationLocationSerializers, UpdateOrganizationLocationSerializers, ViewOrganizationLocationSerializers, DeactivateOrganizationLocationSerializers, ViewOrganizationDepartmentSerializers, UpdateOrganizationDepartmentSerializers, CreateOrganizationDepartmentSerializers, DeactivateOrganizationDepartmentSerializers, ViewOrganizationPositionSerializers, UpdateOrganizationPositionSerializers, CreateOrganizationPositionSerializers, DeactivateOrganizationPositionSerializers, ViewStaffClassificationSerializers, UpdateStaffClassificationSerializers, CreateStaffClassificationSerializers, DeactivateStaffClassificationSerializers
+from .serializers import GroupHeadSerializers, OrganizationSerializers, OrganizationLocationSerializers, OrganizationDepartmentSerializers, OrganizationPositionSerializers, StaffClassificationSerializers
 from rest_framework.parsers import MultiPartParser, FormParser
 # Create your views here.
 
@@ -169,7 +169,7 @@ class OrganizationViewset(viewsets.ModelViewSet):
     def list(self, request):
         try:
             obj = Organization.objects.all()
-            serializer = ViewOrganizationSerializers(obj, many=True)
+            serializer = OrganizationSerializers(obj, many=True)
             return Response({'status':200,'data':serializer.data, 'msg': 'success'})
         except:
             return Response({'status': 400, 'msg': 'Something went wrong' })
@@ -182,7 +182,7 @@ class OrganizationViewset(viewsets.ModelViewSet):
                 if obj.organization_is_active == False:
                     msg = "Please update the organization status to active"
                     return Response({'status':200, 'msg': msg})
-                serializer = ViewOrganizationSerializers(obj, many=False)
+                serializer = OrganizationSerializers(obj, many=False)
                 return Response({'status':200, 'data':serializer.data, 'msg':'Successfully added'}, status=status.HTTP_200_OK)
             else:
                 return Response({'status':404, 'msg': "Organization does not exist in db"}, status=status.HTTP_404_NOT_FOUND)
@@ -194,7 +194,7 @@ class OrganizationViewset(viewsets.ModelViewSet):
 
     def create(self, request):
         try:
-            serializer = CreateOrganizationSerializers(data = request.data)
+            serializer = OrganizationSerializers(data = request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response({'status':201, 'data':serializer.data, 'msg':'Successfully added'}, status=status.HTTP_201_CREATED)
@@ -208,7 +208,7 @@ class OrganizationViewset(viewsets.ModelViewSet):
             id = pk
             if Organization.objects.filter(pk=id).exists():
                 obj = Organization.objects.get(pk=id)    
-                serializer = UpdateOrganizationSerializers(obj, data = request.data, partial=True)
+                serializer = OrganizationSerializers(obj, data = request.data, partial=True)
                 if serializer.is_valid():
                     serializer.save()
                     return Response({'status':200, 'data': serializer.data, 'msg': 'Updated Successfully'}, status=status.HTTP_200_OK)
@@ -229,8 +229,8 @@ class OrganizationViewset(viewsets.ModelViewSet):
                     return Response({'status':200, 'msg':msg})
                 obj.organization_is_active = False
                 obj.save()
-                serializer = DeactivateOrganizationSerializers(obj)
-                return Response({'status':200, 'data': serializer.data, 'msg': 'Success'}, status=status.HTTP_200_OK)
+                serializer = OrganizationSerializers(obj)
+                return Response({'status':200, 'data': serializer.data, 'msg': 'Deleted Successfully'}, status=status.HTTP_200_OK)
             else:
                 return Response({'status':404, 'msg': 'This Organization does not exists'})
         except:
@@ -242,10 +242,19 @@ class GroupHeadViewset(viewsets.ModelViewSet):
     # permission_classes = [IsAuthenticated]
     # renderer_classes = [Renderer]
     
+    def get(self, request, pk):
+        obj = GroupHead.objects.get(id=id)   
+        if obj.organization_id.exists():
+            if obj.organization_id.organization_is_active == False:
+                return Response({'status':200, 'msg': 'Organization does not exist'})
+        else:
+            return Response({'status':404, 'msg': 'This Grouphead does not exists in database'})  
+
+
     def list(self, request):
         try:    
             obj = GroupHead.objects.all()
-            serializer = ViewGroupHeadSerializers(obj, many=True)
+            serializer = GroupHeadSerializers(obj, many=True)
             return Response({'status':200, 'data':serializer.data, 'msg': 'Success'})
         except:
             return Response({'status': 400, 'msg': 'Something went wrong' }) 
@@ -256,7 +265,7 @@ class GroupHeadViewset(viewsets.ModelViewSet):
             id=pk
             if GroupHead.objects.filter(pk=id).exists():
                 obj = GroupHead.objects.get(id=id)
-                serializer = ViewGroupHeadSerializers(obj, many=False)
+                serializer = GroupHeadSerializers(obj, many=False)
                 return Response({'status':200,'data':serializer.data, 'msg': 'Success'})
             else:
                 return Response({'status':404, 'msg': 'This Grouphead does not exists in database'})   
@@ -266,7 +275,7 @@ class GroupHeadViewset(viewsets.ModelViewSet):
 
     def create(self, request):
         try:
-            serializer = CreateGroupHeadSerializers(data = request.data)
+            serializer = GroupHeadSerializers(data = request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response({'status':201, 'data':serializer.data, 'msg':'Successfully created'}, status=status.HTTP_201_CREATED)
@@ -279,9 +288,12 @@ class GroupHeadViewset(viewsets.ModelViewSet):
     def update(self, request, pk):
         try:
             id = pk
+            
             if GroupHead.objects.filter(pk=id).exists():
                 obj = GroupHead.objects.get(pk=id)    
-                serializer = UpdateGroupHeadSerializers(obj, data = request.data, partial=True)
+                if obj.organization_id.organization_is_active == False:
+                    return Response({'status':400, 'msg': 'Activate the organization first'})
+                serializer = GroupHeadSerializers(obj, data = request.data, partial=True)
                 if serializer.is_valid():
                     serializer.save()
                     return Response({'status':200, 'data': serializer.data, 'msg': 'Updated Successfully'}, status=status.HTTP_200_OK)
@@ -302,8 +314,8 @@ class GroupHeadViewset(viewsets.ModelViewSet):
                     return Response({'status':200, 'msg':msg})
                 obj.is_active = False
                 obj.save()
-                serializer = DeactivateGroupHeadSerializers(obj)
-                return Response({'status':200, 'data': serializer.data, 'msg': 'Success'}, status=status.HTTP_200_OK)
+                serializer = GroupHeadSerializers(obj)
+                return Response({'status':200, 'data': serializer.data, 'msg': 'Successfully Deleted'}, status=status.HTTP_200_OK)
             else:
                 return Response({'status':404, 'msg': 'This Organization does not exists'})
         except:
@@ -317,7 +329,7 @@ class OrganizationLocationViewset(viewsets.ModelViewSet):
     def list(self, request):
         try:
             obj = OrganizationLocation.objects.all()
-            serializer = ViewOrganizationLocationSerializers(obj, many=True)
+            serializer = OrganizationLocationSerializers(obj, many=True)
             return Response({'status':200,'data':serializer.data, 'msg': 'Success'})
         except:
            return Response({'status': 400, 'msg': 'Something went wrong' })
@@ -328,7 +340,7 @@ class OrganizationLocationViewset(viewsets.ModelViewSet):
             id=pk
             if OrganizationLocation.objects.filter(pk=id).exists():
                 obj = OrganizationLocation.objects.get(id=id)
-                serializer = ViewOrganizationLocationSerializers(obj, many=False)
+                serializer = OrganizationLocationSerializers(obj, many=False)
                 return Response({'status':200,'data':serializer.data, 'msg': 'Success'})
             else:
                 return Response({'status':404, 'msg': 'id does not exists in db'})
@@ -337,7 +349,7 @@ class OrganizationLocationViewset(viewsets.ModelViewSet):
 
     def create(self, request):
         try:
-            serializer = CreateOrganizationLocationSerializers(data = request.data)
+            serializer = OrganizationLocationSerializers(data = request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response({'status':201, 'data':serializer.data, 'msg':'Successfully created'}, status=status.HTTP_201_CREATED)
@@ -351,7 +363,7 @@ class OrganizationLocationViewset(viewsets.ModelViewSet):
             id = pk
             if OrganizationLocation.objects.filter(pk=id).exists():
                 obj = OrganizationLocation.objects.get(pk=id)    
-                serializer = UpdateOrganizationLocationSerializers(obj, data = request.data, partial=True)
+                serializer = OrganizationLocationSerializers(obj, data = request.data, partial=True)
                 if serializer.is_valid():
                     serializer.save()
                     return Response({'status':200, 'data': serializer.data, 'msg': 'Updated Successfully'}, status=status.HTTP_200_OK)
@@ -372,8 +384,8 @@ class OrganizationLocationViewset(viewsets.ModelViewSet):
                     return Response({'status':200, 'msg':msg})
                 obj.is_active = False
                 obj.save()
-                serializer = DeactivateOrganizationLocationSerializers(obj, many=False)
-                return Response({'status':200, 'data': serializer.data, 'msg': 'Success'}, status=status.HTTP_200_OK)
+                serializer = OrganizationLocationSerializers(obj, many=False)
+                return Response({'status':200, 'data': serializer.data, 'msg': 'Successfully Deleted'}, status=status.HTTP_200_OK)
             else:
                 return Response({'status':404, 'msg': "This id does not exist in db"})
         except:
@@ -386,7 +398,7 @@ class OrganizationDepartmentViewset(viewsets.ModelViewSet):
     def list(self, request):
         try:
             obj = OrganizationDepartment.objects.all()
-            serializer = ViewOrganizationDepartmentSerializers(obj, many=True)
+            serializer = OrganizationDepartmentSerializers(obj, many=True)
             return Response({'status':200, 'data':serializer.data, 'msg': 'Success'})
         except:
             return Response({'status': 400, 'msg': 'Something went wrong' })
@@ -400,7 +412,7 @@ class OrganizationDepartmentViewset(viewsets.ModelViewSet):
             
             if OrganizationDepartment.objects.filter(pk=id).exists():
                 obj = OrganizationDepartment.objects.get(id=id)
-                serializer = ViewOrganizationDepartmentSerializers(obj, many=False)
+                serializer = OrganizationDepartmentSerializers(obj, many=False)
                 return Response({'status':200, 'data':serializer.data, 'msg': 'Success'})
             else:
                 return Response({'status':404, 'msg': "Department does not exist at this index"}, status=status.HTTP_404_NOT_FOUND)
@@ -409,7 +421,7 @@ class OrganizationDepartmentViewset(viewsets.ModelViewSet):
 
     def create(self, request):
         try:
-            serializer = CreateOrganizationDepartmentSerializers(data = request.data)
+            serializer = OrganizationDepartmentSerializers(data = request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response({'status':201, 'data':serializer.data, 'msg':'Successfully created'}, status=status.HTTP_201_CREATED)
@@ -427,7 +439,7 @@ class OrganizationDepartmentViewset(viewsets.ModelViewSet):
 
             if OrganizationDepartment.objects.filter(pk=id).exists():    
                 obj = OrganizationDepartment.objects.get(pk=id)    
-                serializer = UpdateOrganizationDepartmentSerializers(obj, data = request.data, partial=True)
+                serializer = OrganizationDepartmentSerializers(obj, data = request.data, partial=True)
                 if serializer.is_valid():
                     serializer.save()
                     return Response({'status':200, 'data': serializer.data, 'msg': 'Updated Successfully'}, status=status.HTTP_200_OK)
@@ -452,8 +464,8 @@ class OrganizationDepartmentViewset(viewsets.ModelViewSet):
             if OrganizationDepartment.objects.filter(pk=id).exists():    
                 obj.is_active = False
                 obj.save()
-                serializer = DeactivateOrganizationDepartmentSerializers(obj, many=False)
-                return Response({'status':200, 'data': serializer.data}, status=status.HTTP_200_OK)
+                serializer = OrganizationDepartmentSerializers(obj, many=False)
+                return Response({'status':200, 'data': serializer.data, 'msg': 'Deleted Successfully'}, status=status.HTTP_200_OK)
             else:
                 return Response({'status':404, 'msg': "Department does not exist at this index"}, status=status.HTTP_404_NOT_FOUND) 
         except:
@@ -467,7 +479,7 @@ class OrganizationPositionViewset(viewsets.ModelViewSet):
     def list(self, request):  
         try:
             obj = OrganizationPosition.objects.all()
-            serializer = ViewOrganizationPositionSerializers(obj, many=True)
+            serializer = OrganizationPositionSerializers(obj, many=True)
             return Response({'status':200,'data':serializer.data, 'msg': 'Success'})
         except:
             return Response({'status': 400, 'msg': 'Something went wrong' })
@@ -478,7 +490,7 @@ class OrganizationPositionViewset(viewsets.ModelViewSet):
             id=pk        
             if OrganizationPosition.objects.filter(pk=id).exists():  
                 obj = OrganizationPosition.objects.get(id=id)
-                serializer = ViewOrganizationPositionSerializers(obj, many=False)
+                serializer = OrganizationPositionSerializers(obj, many=False)
                 return Response({'status':200,'data':serializer.data, 'msg': 'Success'})
             else:
                 return Response({'status':404, 'msg': "Position does not exist at this index"}, status=status.HTTP_404_NOT_FOUND) 
@@ -488,7 +500,7 @@ class OrganizationPositionViewset(viewsets.ModelViewSet):
 
     def create(self, request):
         try:
-            serializer = CreateOrganizationPositionSerializers(data = request.data)
+            serializer = OrganizationPositionSerializers(data = request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response({'status':201, 'data':serializer.data, 'msg':'Successfully created'}, status=status.HTTP_201_CREATED)
@@ -503,7 +515,7 @@ class OrganizationPositionViewset(viewsets.ModelViewSet):
             id = pk
             if OrganizationPosition.objects.filter(pk=id).exists():
                 obj = OrganizationPosition.objects.get(pk=id)    
-                serializer = UpdateOrganizationPositionSerializers(obj, data = request.data, partial=True)
+                serializer = OrganizationPositionSerializers(obj, data = request.data, partial=True)
                 if serializer.is_valid():
                     serializer.save()
                     return Response({'status':200, 'data': serializer.data, 'msg': 'Updated Successfully'}, status=status.HTTP_200_OK)
@@ -526,8 +538,8 @@ class OrganizationPositionViewset(viewsets.ModelViewSet):
         
                 obj.is_active = False
                 obj.save()
-                serializer = DeactivateOrganizationPositionSerializers(obj, many=False)
-                return Response({'status':200, 'data': serializer.data, 'msg': 'Success'}, status=status.HTTP_200_OK)
+                serializer = OrganizationPositionSerializers(obj, many=False)
+                return Response({'status':200, 'data': serializer.data, 'msg': 'Successfully Deleted'}, status=status.HTTP_200_OK)
             else:
                 return Response({'status':404, 'msg': "Position does not exist at this index"}, status=status.HTTP_404_NOT_FOUND) 
         except:
@@ -541,7 +553,7 @@ class StaffClassificationViewset(viewsets.ModelViewSet):
     def list(self, request):   
         try:
             obj = StaffClassification.objects.all()
-            serializer = ViewStaffClassificationSerializers(obj, many=True)
+            serializer = StaffClassificationSerializers(obj, many=True)
             return Response({'status':200,'data':serializer.data})
         except:
             return Response({'status': 400, 'msg': 'Something went wrong' })
@@ -551,7 +563,7 @@ class StaffClassificationViewset(viewsets.ModelViewSet):
             id=pk
             if StaffClassification.objects.filter(pk=id).exists(): 
                 obj = StaffClassification.objects.get(id=id)
-                serializer = ViewStaffClassificationSerializers(obj, many=False)
+                serializer = StaffClassificationSerializers(obj, many=False)
                 return Response({'status':200,'data':serializer.data, 'msg': 'Success'})
             else:
                 return Response({'status':404, 'msg': 'Staff does not exist at this position'}, status=status.HTTP_404_NOT_FOUND)
@@ -560,7 +572,7 @@ class StaffClassificationViewset(viewsets.ModelViewSet):
 
     def create(self, request):
         try:
-            serializer = CreateStaffClassificationSerializers(data = request.data)
+            serializer = StaffClassificationSerializers(data = request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response({'status':201, 'data':serializer.data, 'msg':'Successfully created'}, status=status.HTTP_201_CREATED)
@@ -576,14 +588,14 @@ class StaffClassificationViewset(viewsets.ModelViewSet):
         
             if StaffClassification.objects.filter(pk=id).exists(): 
                 obj = StaffClassification.objects.get(pk=id)    
-                serializer = UpdateStaffClassificationSerializers(obj, data = request.data, partial=True)
+                serializer = StaffClassificationSerializers(obj, data = request.data, partial=True)
                 if serializer.is_valid():
                     serializer.save()
                     return Response({'status':200, 'data': serializer.data, 'msg': 'Updated Successfully'}, status=status.HTTP_200_OK)
                 else:
                     return Response({'status':400, 'errors':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
             else:
-                return Response({'status':404, 'msg': 'Staff does not exist at this index'}, status=status.HTTP_404_NOT_FOUND)  
+                return Response({'status':404, 'msg': 'Staff does not exist at thiSs index'}, status=status.HTTP_404_NOT_FOUND)  
         except:
             return Response({'status': 400, 'msg': 'Something went wrong' })
                  
@@ -597,11 +609,11 @@ class StaffClassificationViewset(viewsets.ModelViewSet):
                 if obj.is_active == False:
                     msg = "This location is deactivated not working"
                     return Response({'status':200, 'msg':msg})
-                serializer = DeactivateStaffClassificationSerializers(obj, many=False)
+                serializer = StaffClassificationSerializers(obj, many=False)
                 obj.is_active = False
                 obj.save()
             
-                return Response({'status':200, 'data': serializer.data}, status=status.HTTP_200_OK)
+                return Response({'status':200, 'data': serializer.data, 'msg': 'Successfully Deleted'}, status=status.HTTP_200_OK)
             else:
                 return Response({'status':404, 'msg': 'Staff does not exist at this index'}, status=status.HTTP_404_NOT_FOUND) 
         except:
