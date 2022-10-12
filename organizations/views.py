@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from helpers.renderers import Renderer
 from organizations.models import Organization, GroupHead, OrganizationLocation, OrganizationDepartment, OrganizationPosition, StaffClassification
-from .serializers import GroupHeadSerializers, OrganizationSerializers, OrganizationLocationSerializers, OrganizationDepartmentSerializers, OrganizationPositionSerializers, StaffClassificationSerializers
+from .serializers import GroupHeadSerializers, OrganizationAndLocationSerializers, OrganizationSerializers, OrganizationLocationSerializers, OrganizationDepartmentSerializers, OrganizationPositionSerializers, StaffClassificationSerializers, OrganizationAndLocationSerializers
 from rest_framework.parsers import MultiPartParser, FormParser
 # Create your views here.
 
@@ -170,102 +170,189 @@ def successMsg():
     
 
 # Organization Logic
-class OrganizationViewset(viewsets.ModelViewSet):
-    # permission_classes = [IsAuthenticated]
-    # renderer_classes = [Renderer]
+# class OrganizationViewset(viewsets.ModelViewSet):
+#     permission_classes = [IsAuthenticated]
+#     renderer_classes = [Renderer]
 
-    def list(self, request):
-        api_response = successMsg()
-        try:
-            obj = Organization.objects.all()
-            serializer = OrganizationSerializers(obj, many=True)
-            api_response['data'] = serializer.data
-            api_response['status'] = status.HTTP_200_OK
-            return Response({'status': 200, 'data': serializer.data, 'message':'Success'})
-        except Exception as e:
-            api_response['status'] = status.HTTP_400_BAD_REQUEST
-            api_response['system_error_message'] = str(e)
-            api_response['message'] = ''
-            return Response(api_response)
+#     def list(self, request):
+#         api_response = successMsg()
+#         try:
+#             obj = Organization.objects.all()
+#             serializer = OrganizationSerializers(obj, many=True)
+#             return Response({'status': 200, 'data': serializer.data, 'message':'Success'})
+#         except Exception as e:
+#             api_response['status'] = status.HTTP_400_BAD_REQUEST
+#             api_response['system_error_message'] = str(e)
+#             api_response['message'] = ''
+#             return Response(api_response)
 
-    def retrieve(self, request, pk=None):
-        api_response = successMsg()
-        try:
-            id=pk
-            if Organization.objects.filter(pk=id).exists():
-                obj = Organization.objects.get(id=id)
-                if obj.organization_is_active == False:
-                    msg = "Please update the organization status to active"
-                    return Response({'status':400, 'message': msg})
-                serializer = OrganizationSerializers(obj, many=False)
-                return Response({'status':200, 'data':serializer.data, 'message':'Successfully added'}, status=status.HTTP_200_OK)
-            else:
-                return Response({'status':404, 'message': "Organization does not exist in db"}, status=status.HTTP_404_NOT_FOUND)
-        except ValueError:
-            return Response({'status': 404, 'message': 'Dynamic id entered into url is not of type int' })
-        except Exception as e:
-            api_response['status'] = status.HTTP_400_BAD_REQUEST
-            api_response['system_error_message'] = str(e)
-            api_response['message'] = ''
-            return Response(api_response)
+#     def retrieve(self, request, pk=None):
+#         api_response = successMsg()
+#         try:
+#             id=pk
+#             if Organization.objects.filter(pk=id).exists():
+#                 obj = Organization.objects.get(id=id)
+#                 if obj.organization_is_active == False:
+#                     msg = "Please update the organization status to active"
+#                     return Response({'status':400, 'message': msg})
+#                 serializer = OrganizationSerializers(obj, many=False)
+#                 return Response({'status':200, 'data':serializer.data, 'message':'Successfully added'}, status=status.HTTP_200_OK)
+#             else:
+#                 return Response({'status':404, 'message': "Organization does not exist in db"}, status=status.HTTP_404_NOT_FOUND)
+#         except ValueError:
+#             return Response({'status': 404, 'message': 'Dynamic id entered into url is not of type int' })
+#         except Exception as e:
+#             api_response['status'] = status.HTTP_400_BAD_REQUEST
+#             api_response['system_error_message'] = str(e)
+#             api_response['message'] = ''
+#             return Response(api_response)
             
 
 
-    def create(self, request):
-        api_response = successMsg()
-        try:
-            serializer = OrganizationSerializers(data = request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response({'status':201, 'data':serializer.data, 'message':'Successfully added'}, status=status.HTTP_201_CREATED)
-            else:
-                return Response({'status':400, 'message': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            api_response['status'] = status.HTTP_400_BAD_REQUEST
-            api_response['system_error_message'] = str(e)
-            api_response['message'] = ''
-            return Response(api_response)
+#     def create(self, request):
+#         api_response = successMsg()
+#         try:
+#             serializer = OrganizationSerializers(data = request.data)
+#             if serializer.is_valid():
+#                 serializer.save()
+#                 return Response({'status':201, 'data':serializer.data, 'message':'Successfully added'}, status=status.HTTP_201_CREATED)
+#             else:
+#                 return Response({'status':400, 'message': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+#         except Exception as e:
+#             api_response['status'] = status.HTTP_400_BAD_REQUEST
+#             api_response['system_error_message'] = str(e)
+#             api_response['message'] = ''
+#             return Response(api_response)
 
-    def update(self, request, pk):
-        api_response = successMsg()
-        try:
-            id = pk
-            if Organization.objects.filter(pk=id).exists():
-                obj = Organization.objects.get(pk=id)  
-                serializer = OrganizationSerializers(obj, data = request.data, partial=True)
-                if serializer.is_valid():
-                    serializer.save()
-                    return Response({'status':200, 'data': serializer.data, 'message': 'Updated Successfully'}, status=status.HTTP_200_OK)
-                else:
-                    return Response({'status':400, 'message':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                return Response({'status':404, 'message': 'This Organization does not exists'})
-        except Exception as e:
-            api_response['status'] = status.HTTP_400_BAD_REQUEST
-            api_response['system_error_message'] = str(e)
-            api_response['message'] = ''
-            return Response(api_response)
+#     def update(self, request, pk):
+#         api_response = successMsg()
+#         try:
+#             id = pk
+#             if Organization.objects.filter(pk=id).exists():
+#                 obj = Organization.objects.get(pk=id)  
+#                 serializer = OrganizationSerializers(obj, data = request.data, partial=True)
+#                 if serializer.is_valid():
+#                     serializer.save()
+#                     return Response({'status':200, 'data': serializer.data, 'message': 'Updated Successfully'}, status=status.HTTP_200_OK)
+#                 else:
+#                     return Response({'status':400, 'message':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+#             else:
+#                 return Response({'status':404, 'message': 'This Organization does not exists'})
+#         except Exception as e:
+#             api_response['status'] = status.HTTP_400_BAD_REQUEST
+#             api_response['system_error_message'] = str(e)
+#             api_response['message'] = ''
+#             return Response(api_response)
 
-    def destroy(self, request, pk):
-        api_response = successMsg()
-        try:
-            id = pk
-            if Organization.objects.filter(pk=id).exists():
-                obj = Organization.objects.get(id=pk)
-                if obj.organization_is_active == False:
-                    msg = "Organization is already deactivated"
-                    return Response({'status':200, 'message':msg})
-                obj.organization_is_active = False
-                obj.save()
-                serializer = OrganizationSerializers(obj)
-                return Response({'status':200, 'data': serializer.data, 'message': 'Deleted Successfully'}, status=status.HTTP_200_OK)
-            else:
-                return Response({'status':404, 'message': 'This Organization does not exists'})
-        except Exception as e:
-            api_response['status'] = status.HTTP_400_BAD_REQUEST
-            api_response['system_error_message'] = str(e)
-            api_response['message'] = ''
-            return Response(api_response)
+#     def destroy(self, request, pk):
+#         api_response = successMsg()
+#         try:
+#             id = pk
+#             if Organization.objects.filter(pk=id).exists():
+#                 obj = Organization.objects.get(id=pk)
+#                 if obj.organization_is_active == False:
+#                     msg = "Organization is already deactivated"
+#                     return Response({'status':200, 'message':msg})
+#                 obj.organization_is_active = False
+#                 obj.save()
+#                 serializer = OrganizationSerializers(obj)
+#                 return Response({'status':200, 'data': serializer.data, 'message': 'Deleted Successfully'}, status=status.HTTP_200_OK)
+#             else:
+#                 return Response({'status':404, 'message': 'This Organization does not exists'})
+#         except Exception as e:
+#             api_response['status'] = status.HTTP_400_BAD_REQUEST
+#             api_response['system_error_message'] = str(e)
+#             api_response['message'] = ''
+#             return Response(api_response)
+
+# Organization Location Logic
+# class OrganizationLocationViewset(viewsets.ModelViewSet):
+#     # permission_classes = [IsAuthenticated]
+#     # renderer_classes = [Renderer]
+#     def list(self, request):
+#         api_response = successMsg()
+#         try:
+#             obj = OrganizationLocation.objects.all()
+#             serializer = OrganizationLocationSerializers(obj, many=True)
+#             return Response({'status':200,'data':serializer.data, 'message': 'Success'})
+#         except Exception as e:
+#             api_response['status'] = status.HTTP_400_BAD_REQUEST
+#             api_response['system_error_message'] = str(e)
+#             api_response['message'] = ''
+#             return Response(api_response)
+ 
+
+#     def retrieve(self, request, pk=None):
+#         api_response = successMsg()
+#         try:
+#             id=pk
+#             if OrganizationLocation.objects.filter(pk=id).exists():
+#                 obj = OrganizationLocation.objects.get(id=id)
+#                 serializer = OrganizationLocationSerializers(obj, many=False)
+#                 return Response({'status':200,'data':serializer.data, 'message': 'Success'})
+#             else:
+#                 return Response({'status':404, 'message': 'id does not exists in db'})
+#         except Exception as e:
+#             api_response['status'] = status.HTTP_400_BAD_REQUEST
+#             api_response['system_error_message'] = str(e)
+#             api_response['message'] = ''
+#             return Response(api_response)
+
+#     def create(self, request):
+#         api_response = successMsg()
+#         try:
+#             serializer = OrganizationLocationSerializers(data = request.data)
+#             if serializer.is_valid():
+#                 serializer.save()
+#                 return Response({'status':201, 'data':serializer.data, 'message':'Successfully created'}, status=status.HTTP_201_CREATED)
+#             else:
+#                 return Response({'status':404, 'message':serializer.errors}, status=status.HTTP_404_NOT_FOUND)
+#         except Exception as e:
+#             api_response['status'] = status.HTTP_400_BAD_REQUEST
+#             api_response['system_error_message'] = str(e)
+#             api_response['message'] = ''
+#             return Response(api_response)
+    
+#     def update(self, request, pk):
+#         api_response = successMsg()
+#         try:
+#             id = pk
+#             if OrganizationLocation.objects.filter(pk=id).exists():
+#                 obj = OrganizationLocation.objects.get(pk=id)    
+#                 serializer = OrganizationLocationSerializers(obj, data = request.data, partial=True)
+#                 if serializer.is_valid():
+#                     serializer.save()
+#                     return Response({'status':200, 'data': serializer.data, 'message': 'Updated Successfully'}, status=status.HTTP_200_OK)
+#                 else:
+#                     return Response({'status':400, 'message':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+#             else:
+#                 return Response({'status':404, 'message': 'This id does not exists in db'})
+#         except Exception as e:
+#             api_response['status'] = status.HTTP_400_BAD_REQUEST
+#             api_response['system_error_message'] = str(e)
+#             api_response['message'] = ''
+#             return Response(api_response)
+
+#     def destroy(self, request, pk):
+#         api_response = successMsg()
+#         try:
+#             id = pk
+#             if OrganizationLocation.objects.filter(pk=id).exists():
+#                 obj = OrganizationLocation.objects.get(id=pk)
+#                 if obj.is_active == False:
+#                     msg = "This location is already deactivated"
+#                     return Response({'status':400, 'message':msg})
+#                 obj.is_active = False
+#                 obj.save()
+#                 serializer = OrganizationLocationSerializers(obj, many=False)
+#                 return Response({'status':200, 'data': serializer.data, 'message': 'Successfully Deleted'}, status=status.HTTP_200_OK)
+#             else:
+#                 return Response({'status':404, 'message': "This id does not exist in db"})
+#         except Exception as e:
+#             api_response['status'] = status.HTTP_400_BAD_REQUEST
+#             api_response['system_error_message'] = str(e)
+#             api_response['message'] = ''
+#             return Response(api_response)
 
 
 # Group head logic
@@ -362,94 +449,6 @@ class GroupHeadViewset(viewsets.ModelViewSet):
             return Response(api_response)
 
 
-# Organization Location Logic
-class OrganizationLocationViewset(viewsets.ModelViewSet):
-    # permission_classes = [IsAuthenticated]
-    # renderer_classes = [Renderer]
-    def list(self, request):
-        api_response = successMsg()
-        try:
-            obj = OrganizationLocation.objects.all()
-            serializer = OrganizationLocationSerializers(obj, many=True)
-            return Response({'status':200,'data':serializer.data, 'message': 'Success'})
-        except Exception as e:
-            api_response['status'] = status.HTTP_400_BAD_REQUEST
-            api_response['system_error_message'] = str(e)
-            api_response['message'] = ''
-            return Response(api_response)
- 
-
-    def retrieve(self, request, pk=None):
-        api_response = successMsg()
-        try:
-            id=pk
-            if OrganizationLocation.objects.filter(pk=id).exists():
-                obj = OrganizationLocation.objects.get(id=id)
-                serializer = OrganizationLocationSerializers(obj, many=False)
-                return Response({'status':200,'data':serializer.data, 'message': 'Success'})
-            else:
-                return Response({'status':404, 'message': 'id does not exists in db'})
-        except Exception as e:
-            api_response['status'] = status.HTTP_400_BAD_REQUEST
-            api_response['system_error_message'] = str(e)
-            api_response['message'] = ''
-            return Response(api_response)
-
-    def create(self, request):
-        api_response = successMsg()
-        try:
-            serializer = OrganizationLocationSerializers(data = request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response({'status':201, 'data':serializer.data, 'message':'Successfully created'}, status=status.HTTP_201_CREATED)
-            else:
-                return Response({'status':404, 'message':serializer.errors}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            api_response['status'] = status.HTTP_400_BAD_REQUEST
-            api_response['system_error_message'] = str(e)
-            api_response['message'] = ''
-            return Response(api_response)
-    
-    def update(self, request, pk):
-        api_response = successMsg()
-        try:
-            id = pk
-            if OrganizationLocation.objects.filter(pk=id).exists():
-                obj = OrganizationLocation.objects.get(pk=id)    
-                serializer = OrganizationLocationSerializers(obj, data = request.data, partial=True)
-                if serializer.is_valid():
-                    serializer.save()
-                    return Response({'status':200, 'data': serializer.data, 'message': 'Updated Successfully'}, status=status.HTTP_200_OK)
-                else:
-                    return Response({'status':400, 'message':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                return Response({'status':404, 'message': 'This id does not exists in db'})
-        except Exception as e:
-            api_response['status'] = status.HTTP_400_BAD_REQUEST
-            api_response['system_error_message'] = str(e)
-            api_response['message'] = ''
-            return Response(api_response)
-
-    def destroy(self, request, pk):
-        api_response = successMsg()
-        try:
-            id = pk
-            if OrganizationLocation.objects.filter(pk=id).exists():
-                obj = OrganizationLocation.objects.get(id=pk)
-                if obj.is_active == False:
-                    msg = "This location is already deactivated"
-                    return Response({'status':400, 'message':msg})
-                obj.is_active = False
-                obj.save()
-                serializer = OrganizationLocationSerializers(obj, many=False)
-                return Response({'status':200, 'data': serializer.data, 'message': 'Successfully Deleted'}, status=status.HTTP_200_OK)
-            else:
-                return Response({'status':404, 'message': "This id does not exist in db"})
-        except Exception as e:
-            api_response['status'] = status.HTTP_400_BAD_REQUEST
-            api_response['system_error_message'] = str(e)
-            api_response['message'] = ''
-            return Response(api_response)
 
 # organization Department Logic
 class OrganizationDepartmentViewset(viewsets.ModelViewSet):
@@ -727,6 +726,111 @@ class StaffClassificationViewset(viewsets.ModelViewSet):
                 return Response({'status':200, 'data': serializer.data, 'message': 'Successfully Deleted'}, status=status.HTTP_200_OK)
             else:
                 return Response({'status':404, 'message': 'Staff does not exist at this index'}, status=status.HTTP_404_NOT_FOUND) 
+        except Exception as e:
+            api_response['status'] = status.HTTP_400_BAD_REQUEST
+            api_response['system_error_message'] = str(e)
+            api_response['message'] = ''
+            return Response(api_response)
+
+
+
+class OrganizationViewset(viewsets.ModelViewSet):
+    # permission_classes = [IsAuthenticated]
+    # renderer_classes = [Renderer]
+
+    def list(self, request):
+        api_response = successMsg()
+        try:
+            obj = Organization.objects.all()
+            serializer = OrganizationAndLocationSerializers(obj, many=True)
+            return Response({'status': 200, 'data': serializer.data, 'message':'Success'})
+        except Exception as e:
+            api_response['status'] = status.HTTP_400_BAD_REQUEST
+            api_response['system_error_message'] = str(e)
+            api_response['message'] = ''
+            return Response(api_response)
+
+    def retrieve(self, request, pk=None):
+        api_response = successMsg()
+        try:
+            id=pk
+            if Organization.objects.filter(pk=id).exists():
+                obj = Organization.objects.get(id=id)
+                if obj.organization_is_active == False:
+                    msg = "Please update the organization status to active"
+                    return Response({'status':400, 'message': msg})
+                serializer = OrganizationAndLocationSerializers(obj, many=False)
+                return Response({'status':200, 'data':serializer.data, 'message':'Successfully added'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'status':404, 'message': "Organization does not exist in db"}, status=status.HTTP_404_NOT_FOUND)
+        except ValueError:
+            return Response({'status': 404, 'message': 'Dynamic id entered into url is not of type int' })
+        except Exception as e:
+            api_response['status'] = status.HTTP_400_BAD_REQUEST
+            api_response['system_error_message'] = str(e)
+            api_response['message'] = ''
+            return Response(api_response)
+            
+
+
+    def create(self, request):
+        api_response = successMsg()
+        try:
+            city_name = request.data.get('city_name')
+            locations = {'organization_id':1 , 'city_name': city_name}
+            serializer = OrganizationSerializers(data = request.data)
+            if serializer.is_valid():
+                org = serializer.save()
+                locations['organization_id'] = org.id
+                lserializer = OrganizationLocationSerializers(data = locations)
+                if lserializer.is_valid():
+                    lserializer.save()
+                    print(lserializer)
+                print(org)
+                return Response({'status':201, 'data':serializer.data, 'message':'Successfully added'}, status=status.HTTP_201_CREATED)
+            else:
+                return Response({'status':400, 'message': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            api_response['status'] = status.HTTP_400_BAD_REQUEST
+            api_response['system_error_message'] = str(e)
+            api_response['message'] = ''
+            return Response(api_response)
+
+    def update(self, request, pk):
+        api_response = successMsg()
+        try:
+            id = pk
+            if Organization.objects.filter(pk=id).exists():
+                obj = Organization.objects.get(pk=id)  
+                serializer = OrganizationAndLocationSerializers(obj, data = request.data, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response({'status':200, 'data': serializer.data, 'message': 'Updated Successfully'}, status=status.HTTP_200_OK)
+                else:
+                    return Response({'status':400, 'message':serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({'status':404, 'message': 'This Organization does not exists'})
+        except Exception as e:
+            api_response['status'] = status.HTTP_400_BAD_REQUEST
+            api_response['system_error_message'] = str(e)
+            api_response['message'] = ''
+            return Response(api_response)
+
+    def destroy(self, request, pk):
+        api_response = successMsg()
+        try:
+            id = pk
+            if Organization.objects.filter(pk=id).exists():
+                obj = Organization.objects.get(id=pk)
+                if obj.organization_is_active == False:
+                    msg = "Organization is already deactivated"
+                    return Response({'status':200, 'message':msg})
+                obj.organization_is_active = False
+                obj.save()
+                serializer = OrganizationAndLocationSerializers(obj)
+                return Response({'status':200, 'data': serializer.data, 'message': 'Deleted Successfully'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'status':404, 'message': 'This Organization does not exists'})
         except Exception as e:
             api_response['status'] = status.HTTP_400_BAD_REQUEST
             api_response['system_error_message'] = str(e)

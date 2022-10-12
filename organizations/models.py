@@ -18,6 +18,7 @@ class Organization(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+
 grouphead_choices = (
     (1, 'Technical'),
     (2, 'Non-Technical'),
@@ -27,16 +28,18 @@ class GroupHead(models.Model):
     organization_id = models.ForeignKey(Organization, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     grouphead_type = models.CharField(max_length=200, choices = grouphead_choices)
-    is_status = models.BooleanField(default=1)
+    is_status = models.IntegerField(default=1)
     is_active = models.BooleanField(default=1)
     description = models.TextField(max_length=500, null=True, blank=True) 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    
+
 class OrganizationLocation(models.Model):
-    organization_id = models.ForeignKey(Organization, on_delete=models.CASCADE)
-    city_id = models.IntegerField()
-    city_name = models.CharField(max_length=200)
+    organization_id = models.ForeignKey(Organization, related_name='locations', on_delete=models.CASCADE)
+    city_id = models.IntegerField(blank=True, null=True)
+    city_name = models.CharField(max_length=200 )
     latitute = models.DecimalField(max_digits=22, decimal_places=16, blank=True, null=True)
     longitute = models.DecimalField(max_digits=22, decimal_places=16, blank=True, null=True)
     address = models.CharField(max_length=200, null=True, blank=True)
@@ -44,6 +47,9 @@ class OrganizationLocation(models.Model):
     is_active = models.BooleanField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.city_name
 
 
 class OrganizationDepartment(models.Model):
@@ -62,7 +68,7 @@ class StaffClassification(models.Model):
     non_technical_title = models.CharField(max_length=200, blank=True, null=True)
     title = models.CharField(max_length=200, default="auto title")
     level = models.IntegerField(default=1)
-    is_status = models.BooleanField(default=1)
+    is_status = models.IntegerField(default=1)
     is_active = models.BooleanField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
