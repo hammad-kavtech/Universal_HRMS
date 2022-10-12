@@ -776,18 +776,24 @@ class OrganizationViewset(viewsets.ModelViewSet):
     def create(self, request):
         api_response = successMsg()
         try:
-            city_name = request.data.get('city_name')
+            city_name = request.data.get('city_name') or None
+            if city_name is None:
+                city_name = 'Lahore'
+
             locations = {'organization_id':1 , 'city_name': city_name}
             serializer = OrganizationSerializers(data = request.data)
             if serializer.is_valid():
                 org = serializer.save()
-                locations['organization_id'] = org.id
+                locations['organization'] = org.id
                 lserializer = OrganizationLocationSerializers(data = locations)
                 if lserializer.is_valid():
                     lserializer.save()
-                    print(lserializer)
-                print(org)
-                return Response({'status':201, 'data':serializer.data, 'message':'Successfully added'}, status=status.HTTP_201_CREATED)
+                    obj = Organization.objects.get(id=org.id)
+                    org_serializer = OrganizationAndLocationSerializers(obj, many=False)
+                    
+                    return Response({'status':201, 'data':org_serializer.data, 'message':'Successfully added'}, status=status.HTTP_201_CREATED)
+                else:
+                    return Response({'status':400, 'message': lserializer.errors}, status=status.HTTP_400_BAD_REQUEST)
             else:
                 return Response({'status':400, 'message': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:

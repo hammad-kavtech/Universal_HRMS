@@ -52,12 +52,7 @@ class OrganizationAndLocationSerializers(serializers.ModelSerializer):
 
 
     def create(self, validated_data):
-        city_name = validated_data.get('city_name')
-        print(city_name)
-        locations = [{'city_name': city_name}]
         validated_data.pop("city_name")
-        validated_data['locations'] = locations
-        print(validated_data)
         return validated_data
 
 

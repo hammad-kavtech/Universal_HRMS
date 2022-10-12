@@ -6,7 +6,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 def upload_to(instance, filename):
     return 'images/{filename}'.format(filename=filename)
 class Organization(models.Model):
-    user_id = models.ForeignKey(HrmsUsers, on_delete=models.CASCADE, default=1)
+    user = models.ForeignKey(HrmsUsers, on_delete=models.CASCADE, default=1)
     organization_name = models.CharField(max_length=200, unique=True)
     organization_tagline = models.TextField(max_length=300, null=True, blank=True)
     organization_vision = models.TextField(max_length=300, null=True, blank=True)
@@ -25,7 +25,7 @@ grouphead_choices = (
 )
 
 class GroupHead(models.Model):
-    organization_id = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     grouphead_type = models.CharField(max_length=200, choices = grouphead_choices)
     is_status = models.IntegerField(default=1)
@@ -37,7 +37,7 @@ class GroupHead(models.Model):
     
 
 class OrganizationLocation(models.Model):
-    organization_id = models.ForeignKey(Organization, related_name='locations', on_delete=models.CASCADE)
+    organization = models.ForeignKey(Organization, related_name='locations', on_delete=models.CASCADE)
     city_id = models.IntegerField(blank=True, null=True)
     city_name = models.CharField(max_length=200 )
     latitute = models.DecimalField(max_digits=22, decimal_places=16, blank=True, null=True)
@@ -53,7 +53,7 @@ class OrganizationLocation(models.Model):
 
 
 class OrganizationDepartment(models.Model):
-    grouphead_id = models.ForeignKey(GroupHead, on_delete=models.CASCADE)
+    grouphead = models.ForeignKey(GroupHead, on_delete=models.CASCADE)
     department_title = models.CharField(max_length=200)
     department_description = models.TextField(max_length=500, null=True, blank=True)
     department_status = models.BooleanField(default=1)
@@ -63,7 +63,7 @@ class OrganizationDepartment(models.Model):
 
 
 class StaffClassification(models.Model):
-    organization_id = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
     technical_title = models.CharField(max_length=200, blank=True, null=True)
     non_technical_title = models.CharField(max_length=200, blank=True, null=True)
     title = models.CharField(max_length=200, default="auto title")
@@ -74,7 +74,7 @@ class StaffClassification(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
 class OrganizationPosition(models.Model):
-    department_id = models.ForeignKey(OrganizationDepartment, on_delete=models.CASCADE) 
+    department = models.ForeignKey(OrganizationDepartment, on_delete=models.CASCADE) 
     staff_id = models.ForeignKey(StaffClassification, on_delete=models.CASCADE)
     position_title = models.CharField(max_length=200, null=True, blank=True)
     position_description = models.TextField(max_length=500, null=True, blank=True)
